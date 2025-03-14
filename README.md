@@ -1,6 +1,19 @@
 # bullboard-nestjs
 - 功能：bullmq dashboard(仅适配了bullmq)
+- `初衷`：为了测试环境快速测试，所以牺牲了很多可以优化的点
 - ⚠️ 注意package.json中已定义"packageManager": "pnpm@9.15.2", 建议使用pnpm二次开发或安装与构建
+
+
+
+## 功能该要
+
+- 仅包含查看、增加等基于bull-board库的简单交互
+- ❌ 无认证功能
+- ❌ bull-board自定义选项未提取到环境变量
+
+
+
+
 
 ## 构建前提
 - 本地构建条件
