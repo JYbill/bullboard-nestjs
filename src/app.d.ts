@@ -7,7 +7,6 @@ declare global {
     PORT: number;
 
     // redis
-    REDIS_PREFIX: string;
     REDIS_HOST: string;
     REDIS_PORT: number;
     REDIS_PASSWORD: string;

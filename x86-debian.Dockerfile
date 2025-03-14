@@ -9,7 +9,7 @@ RUN npm run build
 
 FROM node:22-slim AS production
 WORKDIR /app
-ENV NODE_ENV production
+ENV NODE_ENV=production
 COPY --from=builder /app/package.json .
 RUN npm config set registry http://192.168.88.115:8081/repository/npm-proxy/ # 备用 RUN npm config set registry https://registry.npmmirror.com
 RUN npm i pm2 -g

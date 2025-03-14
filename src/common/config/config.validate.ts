@@ -16,10 +16,6 @@ class EnvConfig implements IEnv {
 
   @IsString()
   @Expose()
-  REDIS_PREFIX: string;
-
-  @IsString()
-  @Expose()
   REDIS_HOST: string;
 
   @IsNumber()
