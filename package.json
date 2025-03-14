@@ -19,7 +19,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy:docker": "bash ./docker-build.sh -p x86-debian"
+    "deploy:docker": "bash ./docker-build.sh -p x86-debian",
+    "deploy:docker:local": "bash ./docker-build.sh -p x86-debian -s"
   },
   "dependencies": {
     "@bull-board/api": "^6.7.10",
