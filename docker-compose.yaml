@@ -1,0 +1,16 @@
+# 部署模板
+services:
+  bullboard:
+    image: 192.168.88.115:8082/bullboard:x86-origin-develop_xqv_501b64a2da
+    container_name: bullboard
+    ports:
+      - "9110:9110"
+    environment:
+      TZ: "Asia/Shanghai"
+      LANG: "zh_CN.UTF-8"
+    volumes:
+      - $PWD/env:/app/env
+      - $PWD/logs:/app/logs
+      - /etc/localtime:/etc/localtime
+      - /etc/vimrc:/etc/vim/vimrc
+    restart: unless-stopped
