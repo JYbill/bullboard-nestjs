@@ -57,6 +57,7 @@ touch .production.env
 ```
 ```dotenv
 # .env文件
+# nestjs端口
 PORT=9110
 
 # .production.env
