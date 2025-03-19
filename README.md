@@ -78,6 +78,9 @@ PORT=9110
 REDIS_HOST=192.168.88.234
 REDIS_PORT=6379
 REDIS_PASSWORD=1234567890
+# redis db
+REDIS_DB=0
+
 # bullMQ队列名称，用JSON数组形式表示
 BULL_QUEUE=["executor"]
 # bullMQ的prefix前缀
