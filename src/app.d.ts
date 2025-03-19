@@ -10,6 +10,7 @@ declare global {
     REDIS_HOST: string;
     REDIS_PORT: number;
     REDIS_PASSWORD: string;
+    REDIS_DB: number;
 
     // bullmq
     BULL_QUEUE: string;

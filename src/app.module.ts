@@ -24,6 +24,7 @@ export class AppModule implements NestModule {
     const redisHost = this.configService.getOrThrow("REDIS_HOST");
     const redisPort = this.configService.getOrThrow("REDIS_PORT");
     const redisPwd = this.configService.getOrThrow("REDIS_PASSWORD");
+    const dbNum = this.configService.getOrThrow("REDIS_DB");
     const bullPrefix = this.configService.getOrThrow("BULL_PREFIX");
     const queueNameListJSON = this.configService.getOrThrow("BULL_QUEUE");
     const queueNameList = JSON.parse(queueNameListJSON) as string[];
@@ -35,6 +36,7 @@ export class AppModule implements NestModule {
           host: redisHost,
           port: redisPort,
           password: redisPwd,
+          db: dbNum,
         },
         prefix: bullPrefix,
       });

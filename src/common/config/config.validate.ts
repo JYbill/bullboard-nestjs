@@ -33,6 +33,10 @@ class EnvConfig implements IEnv {
   @IsString()
   @Expose()
   BULL_PREFIX: string;
+
+  @IsNumber()
+  @Expose()
+  REDIS_DB: number;
 }
 
 export function validateConfig(config: Record<string, unknown>) {
