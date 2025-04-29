@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'rag', // 名称
+      name: 'bullboard', // 名称
       script: './dist/main.js', // nest入口文件
       cwd: './', // 工作目录
       instances: 1, // 默认 -1：cup - 1
