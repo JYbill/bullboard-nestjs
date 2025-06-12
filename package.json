@@ -23,8 +23,8 @@
     "deploy:docker:local": "bash ./docker-build.sh -p x86-debian -s"
   },
   "dependencies": {
-    "@bull-board/api": "^6.7.10",
-    "@bull-board/express": "^6.7.10",
+    "@bull-board/api": "^6.10.1",
+    "@bull-board/express": "^6.10.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.1",
     "@nestjs/core": "^11.0.1",
