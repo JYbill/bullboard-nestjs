@@ -1,8 +1,8 @@
 /**
  * @Description: 全局类型文件
  */
-declare global {
-  declare interface IEnv {
+global {
+  interface IEnv {
     // .env环境变量
     PORT: number;
 
