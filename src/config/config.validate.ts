@@ -16,27 +16,15 @@ class EnvConfig implements IEnv {
 
   @IsString()
   @Expose()
-  REDIS_HOST: string;
-
-  @IsNumber()
-  @Expose()
-  REDIS_PORT: number;
+  BULL_BOARD_USERNAME: string;
 
   @IsString()
   @Expose()
-  REDIS_PASSWORD: string;
+  BULL_BOARD_PASSWORD_HASH: string;
 
   @IsString()
   @Expose()
-  BULL_QUEUE: string;
-
-  @IsString()
-  @Expose()
-  BULL_PREFIX: string;
-
-  @IsNumber()
-  @Expose()
-  REDIS_DB: number;
+  BULL_QUEUES: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {
