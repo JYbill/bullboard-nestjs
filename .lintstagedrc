@@ -1,6 +1,6 @@
 {
   "*.{ts}": [
-    "npm run format",
-    "npm run lint"
+    "eslint --ext ts,cts,mts --concurrency auto",
+    "prettier --write"
   ]
 }
