@@ -2,10 +2,11 @@ FROM --platform=linux/amd64 node:22-slim AS builder
 WORKDIR /app
 
 COPY package.json .
-RUN npm config set registry http://192.168.88.115:8081/repository/npm-proxy/ # 备用 RUN npm config set registry https://registry.npmmirror.com
-RUN npm install --ignore-scripts --legacy-peer-deps
+COPY .npmrc .
+RUN npm i -g pnpm && npm cache clean -f
+RUN pnpm install --ignore-scripts && pnpm store prune
 COPY . .
-RUN npm run build
+RUN pnpm build
 
 FROM --platform=linux/amd64 node:22-slim AS production
 WORKDIR /app
