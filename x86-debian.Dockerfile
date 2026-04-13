@@ -1,34 +1,37 @@
 FROM --platform=linux/amd64 node:22-slim AS builder
 WORKDIR /app
+
 COPY package.json .
 RUN npm config set registry http://192.168.88.115:8081/repository/npm-proxy/ # 备用 RUN npm config set registry https://registry.npmmirror.com
 RUN npm install --ignore-scripts --legacy-peer-deps
 COPY . .
-RUN sed -i 's/"typeCheck": true/"typeCheck": false/' nest-cli.json
 RUN npm run build
 
 FROM --platform=linux/amd64 node:22-slim AS production
 WORKDIR /app
+
+# 拆分方便检查每一层的磁盘占用
+RUN echo "deb http://mirrors.aliyun.com/debian/ bookworm main" > /etc/apt/sources.list && \
+   echo "deb http://mirrors.aliyun.com/debian/ bookworm-updates main" >> /etc/apt/sources.list && \
+   echo "deb http://mirrors.aliyun.com/debian-security/ bookworm-security main" >> /etc/apt/sources.list && \
+   rm -rf /etc/apt/sources.list.d/*
+
+# 一些方便线上调试的工具（避免弱网环境不方便）
+RUN apt-get update && apt-get install -y bash vim curl && apt-get autoclean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
 ENV NODE_ENV=production
-COPY --from=builder /app/package.json .
-RUN npm config set registry http://192.168.88.115:8081/repository/npm-proxy/ # 备用 RUN npm config set registry https://registry.npmmirror.com
-RUN npm i pm2 -g
+COPY package.json .
+COPY .npmrc .
+RUN npm i pm2 pnpm -g --verbose && npm cache clean -f
+RUN pnpm config set package-lock false
 RUN pm2 install pm2-logrotate
 RUN pm2 set pm2-logrotate:max_size 200M && pm2 set pm2-logrotate:retain 60
-RUN npm install --omit=dev --ignore-scripts --legacy-peer-deps && npm cache clean --force
-COPY --from=builder /app/pm2.config.js .
-COPY --from=builder /app/dist dist
-RUN apt-get update && apt-get install -y \
-    bind9-dnsutils \
-    bash \
-    bash-completion \
-    vim \
-    openssl \
-    curl \
-    tcpdump \
-    net-tools
+RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
-# 清理缓存文件
-RUN rm -rf /tmp/* && rm -rf /var/tmp/*
+
+COPY pm2.config.js .
+COPY --from=builder /app/dist dist
+
+
 EXPOSE 3000
-CMD ["pm2", "start", "pm2.config.js", "--no-daemon"]
+CMD ["pm2-runtime", "pm2.config.js"]
