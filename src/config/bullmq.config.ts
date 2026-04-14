@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { plainToInstance } from "class-transformer";
-import { ArrayNotEmpty, IsArray, IsNumber, IsString, validateSync } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, validateSync } from "class-validator";
 import { type BullmqConfigItem } from "@type/config";
 
 const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
@@ -19,8 +19,9 @@ class BullmqConfigEntity implements BullmqConfigItem {
   @IsNumber()
   dbNum: number;
 
+  @IsOptional()
   @IsString()
-  prefix: string;
+  prefix?: string;
 
   @IsString()
   bullPrefix: string;
@@ -52,7 +53,7 @@ export function loadBullmqConfig(appRoot: string): BullmqConfigItem[] {
   }
 
   if (!Array.isArray(parsedConfig)) {
-    throw new Error(`BullMQ 配置文件必须是 JSON 数组 ${configFilePath}`);
+    throw new Error(`BullMQ 配置文件必须是 JSONC 数组 ${configFilePath}`);
   }
 
   if (parsedConfig.length === 0) {

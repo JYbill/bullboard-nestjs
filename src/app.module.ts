@@ -39,7 +39,9 @@ export class AppModule implements NestModule {
       const bullPrefix = config.bullPrefix;
       const queues = config.queues.map((queueName: string) => {
         const queue = new Queue(queueName, { connection: connectOption, prefix: bullPrefix });
-        return new BullMQAdapter(queue, { prefix, delimiter: "-" });
+        // prefix 允许省略，未配置时沿用 Bull Board 默认展示路径。
+        const adapterOptions = prefix === undefined ? { delimiter: "-" } : { prefix, delimiter: "-" };
+        return new BullMQAdapter(queue, adapterOptions);
       });
       queueAdapterList.push(...queues);
     }

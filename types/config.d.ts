@@ -6,7 +6,7 @@ export type BullmqConfigItem = {
   port: number;
   password: string;
   dbNum: number;
-  prefix: string;
+  prefix?: string;
   bullPrefix: string;
   queues: string[];
 };

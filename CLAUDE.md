@@ -5,7 +5,7 @@
 
 # Landmines
 
-- BullMQ queue definitions now live in `env/bullmq.config.json`, and that file is intentionally gitignored as private config. Keep the loader path, `.env` comment, and README example in sync.
+- BullMQ queue definitions now live in `env/bullmq.config.jsonc`, and that file is intentionally gitignored as private config. Keep the loader path and README example in sync.
 - `test/app.e2e-spec.ts` is still the Nest starter test and asserts `GET /` returns `Hello World!`; it is not a reliable description of current Bull Board behavior.
 - `package.json` metadata still describes another service (`rag-server`). When summarizing this repo, trust the actual runtime wiring instead of the package metadata.
 
