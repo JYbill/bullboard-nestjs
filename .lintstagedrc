@@ -1,5 +1,5 @@
 {
-  "*.{ts}": [
+  "*.{mts}": [
     "eslint --ext ts,cts,mts --concurrency auto",
     "prettier --write"
   ]

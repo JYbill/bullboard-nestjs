@@ -1,0 +1,11 @@
+[
+  {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": "<redis-password>",
+    "dbNum": 0,
+    "prefix": "app-",
+    "bullPrefix": "bull",
+    "queues": ["example-queue"]
+  }
+]

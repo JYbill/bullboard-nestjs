@@ -1,13 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { validateConfig } from "@/config/config.validate";
-import { Queue } from "bullmq";
-import { ExpressAdapter } from "@bull-board/express";
+import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware";
-import { type BullmqConfigItem } from "@type/config";
+import { ExpressAdapter } from "@bull-board/express";
+import { Queue } from "bullmq";
 import { ConnectionOptions } from "bullmq/dist/esm/interfaces/redis-options";
+import type { BullmqConfigItem } from "@type/config";
 
 @Module({
   imports: [
@@ -21,11 +21,10 @@ import { ConnectionOptions } from "bullmq/dist/esm/interfaces/redis-options";
   ],
 })
 export class AppModule implements NestModule {
-  constructor(private readonly configService: ConfigService<IEnv>) {}
+  constructor(private readonly config: ConfigService<IEnv>) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const bullQueues = this.configService.getOrThrow("BULL_QUEUES");
-    const configList = JSON.parse(bullQueues) as BullmqConfigItem[];
+    const configList: BullmqConfigItem[] = this.config.getOrThrow("BULLMQ_CONFIG");
 
     // 根据queueName列表创建多个队列实例，并包装成Bull Board面板的适配器
     const queueAdapterList: BullMQAdapter[] = [];
@@ -38,7 +37,7 @@ export class AppModule implements NestModule {
       };
       const prefix = config.prefix;
       const bullPrefix = config.bullPrefix;
-      const queues = config.queues.map((queueName) => {
+      const queues = config.queues.map((queueName: string) => {
         const queue = new Queue(queueName, { connection: connectOption, prefix: bullPrefix });
         return new BullMQAdapter(queue, { prefix, delimiter: "-" });
       });

@@ -65,27 +65,32 @@ docker push done!
 ```shell
 mkdir env
 touch .env
-touch .production.env
+touch bullmq.config.json
 ```
 ```dotenv
 # .env文件
 # nestjs端口
 PORT=9110
 
-# .production.env
-# redis相关配置
-REDIS_HOST=192.168.88.234
-REDIS_PORT=6379
-REDIS_PASSWORD=1234567890
-# redis db
-REDIS_DB=0
-
-# bullMQ队列名称，用JSON数组形式表示
-BULL_QUEUE=["executor"]
-# bullMQ的prefix前缀
-BULL_PREFIX=RAGBullMQ
-
+# 面板认证账号
+BULL_BOARD_USERNAME=root
+# SHA-256 摘要内容（以下对应1234567890的SHA-256摘要）
+BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646
 ```
+```json
+[
+  {
+    "host": "192.168.88.234",
+    "port": 6379,
+    "password": "1234567890",
+    "dbNum": 0,
+    "prefix": "rag-",
+    "bullPrefix": "RAGBullMQ",
+    "queues": ["executor"]
+  }
+]
+```
+- `bullmq.config.json` 放在 `env/` 目录下，容器会跟着 `docker-compose.yaml` 的目录挂载一起读到。
 - 更改`docker-compose.yaml`文件
 ```yaml
 # 这里我假设url为"192.168.88.115:8082"需要修改成自己的docker仓库地址, 后面的tag也需要更改构建之后的tag（如上面的："x86-debian-main_26117f5851"）
