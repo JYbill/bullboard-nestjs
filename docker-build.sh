@@ -12,20 +12,17 @@ do
 done
 shift $(($OPTIND - 1))
 
-echo "platform:${platform}"
-branch_name=`git name-rev --name-only HEAD`
-echo "present_branch_name:${branch_name}"
-version_id=`git rev-parse HEAD`
-echo "version_id:${version_id}"
-tag_id=${version_id:0:10}
+branch_name=`git branch --show-current | tr '/' '_'`
+commit_id=`git rev-parse --short=10 HEAD`
+tag_id=`git describe --tags --abbrev=0`
+docker_tag="${platform}_${branch_name}_${commit_id}_${tag_id}"
+echo "docker version:${docker_tag}"
 
 service_name="bullboard"
-service_image_name="${service_name}-img"
-docker build --progress=plain -f "${platform}.Dockerfile" -t ${service_image_name} .
-image_id=`docker images ${service_image_name} | awk '{ print $3 }' | sed -n '2p'`
+docker build --progress=plain -f "${platform}.Dockerfile" -t ${service_name} .
+image_id=`docker images ${service_name} | awk '{ print $3 }' | sed -n '2p'`
 echo "image_id:${image_id}"
 
-docker_tag="${platform}-${branch_name//\//-}_${tag_id}"
 echo "docker_tag:${docker_tag}"
 if [[ "$push_to_aliyun" == "true" ]]; then
   echo "docker start push"
