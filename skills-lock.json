@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "upgrade-project": {
+      "source": "JYbill/xqv-skills",
+      "sourceType": "github",
+      "skillPath": "skills/upgrade-project/SKILL.md",
+      "computedHash": "a4eac4a8af260b8d8eb62c8aed6435c7b5c5b7f479ea8e691b1500e27e839b1e"
+    }
+  }
+}
