@@ -1,26 +1,16 @@
 # compiled output
 /dist
-/node_modules
 /build
 
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Dependency directory
+node_modules
 
-# OS
-.DS_Store
-
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
+# IDE
+.id
+.idea
+.idea/modules.xml
+.idea/vcs.xml
+.idea/*.iml
 .project
 .classpath
 .c9/
@@ -35,30 +25,80 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-.development.env
-.production.env
-env/bullmq.config.json
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+logs/*
+!logs/.gitkeep
 
-# temp directory
-.temp
-.tmp
+# OS
+.DS_Store
 
 # Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
+app_version
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-prisma/migrations
-pnpm-lock.yaml
+# Coverage and test output
+coverage
+.nyc_output
+.vitest-attachments/
 
+# Temporary files and cache
+.cache
+.temp
+.tmp
+tmp/*
+!tmp/.gitkeep
+.grunt
+.lock-wscript
+lib-cov
+build/Release
+.nar
+*.nar
+.es5
+.build
+
+# Environment and local config
+.env
+.env.*
+!.env.example
+!.env.*.example
+/env/.env
+/env/.development.env
+/env/.production.env
+env/bullmq.config.json
+/env/tls/*
+mise.local.toml
+
+# Generated docs and process files
+docs/apidoc/
+docs/plan/
+prisma/migrations
+
+# Package manager
+package-lock.json
+
+# AI / agent local state
+.ai
+.aiassistant
 .sisyphus
+.opencode
+.opencode/server.lock.json
+.claude/settings.local.json
+.claude/worktree
+.spec-workflow/
+.codegraph
+
+# Misc
+.tern-project
+deploy
+.publish
+nul

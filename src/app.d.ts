@@ -1,4 +1,4 @@
-import type { BullmqConfigItem } from "@type/config";
+import type { BullmqConfigItem } from "@type/config.js";
 
 /**
  * @Description: 全局类型文件

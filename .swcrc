@@ -1,18 +1,24 @@
 {
   "$schema": "https://swc.rs/schema.json",
-  "sourceMaps": true,
-  "module": {
-    "type": "commonjs",
-    "ignoreDynamic": true
-  },
   "jsc": {
     "target": "esnext",
+    "baseUrl": ".",
+    "externalHelpers": true,
     "parser": {
       "syntax": "typescript",
-      "decorators": true,
-      "dynamicImport": true
+      "decorators": true
     },
-    "baseUrl": "./"
+    "transform": {
+      "decoratorMetadata": true,
+      "legacyDecorator": true
+    },
+    "keepClassNames": true
   },
-  "minify": false
+  "module": {
+    "type": "nodenext",
+    "ignoreDynamic": true
+  },
+  "sourceMaps": true,
+  "minify": false,
+  "exclude": [".*\\.d\\.[cm]?ts$"]
 }

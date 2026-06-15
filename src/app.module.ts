@@ -1,13 +1,13 @@
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { validateConfig } from "@/config/config.validate";
-import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware";
+import { validateConfig } from "@/config/config.validate.js";
+import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware.js";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { Queue } from "bullmq";
-import { ConnectionOptions } from "bullmq/dist/esm/interfaces/redis-options";
-import type { BullmqConfigItem } from "@type/config";
+import type { ConnectionOptions } from "bullmq/dist/esm/interfaces/redis-options.js";
+import type { BullmqConfigItem } from "@type/config.js";
 
 @Module({
   imports: [

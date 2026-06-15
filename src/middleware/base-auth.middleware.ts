@@ -1,6 +1,6 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Injectable, type NestMiddleware } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
 
 @Injectable()

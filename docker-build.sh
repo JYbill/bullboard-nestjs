@@ -19,7 +19,23 @@ docker_tag="${platform}_${branch_name}_${commit_id}_${tag_id}"
 echo "docker version:${docker_tag}"
 
 service_name="bullboard"
-docker build --progress=plain -f "${platform}.Dockerfile" -t ${service_name} .
+docker build --progress=plain -f "${platform}.Dockerfile" --target install -t ${service_name}:install . || exit 1
+(
+  docker build --progress=plain -f "${platform}.Dockerfile" --target format -t ${service_name}:format . || exit 1
+  docker build --progress=plain -f "${platform}.Dockerfile" --target lint -t ${service_name}:lint . || exit 1
+) &
+check_pid=$!
+docker build --progress=plain -f "${platform}.Dockerfile" --target test -t ${service_name}:test . &
+test_pid=$!
+check_status=0
+test_status=0
+wait "$check_pid" || check_status=$?
+wait "$test_pid" || test_status=$?
+if [ "$check_status" -ne 0 ] || [ "$test_status" -ne 0 ]; then
+  echo "docker check fail!"
+  exit 1
+fi
+docker build --progress=plain -f "${platform}.Dockerfile" --target production -t ${service_name} . || exit 1
 image_id=`docker images ${service_name} | awk '{ print $3 }' | sed -n '2p'`
 echo "image_id:${image_id}"
 

@@ -1,11 +1,11 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { INestApplication } from "@nestjs/common";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Test, type TestingModule } from "@nestjs/testing";
+import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { App } from "supertest/types";
-import { AppModule } from "@/app.module";
+import { AppModule } from "@/app.module.js";
 
-describe("AppController (e2e)", () => {
-  let app: INestApplication<App>;
+describe("App (e2e)", () => {
+  let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,7 +16,14 @@ describe("AppController (e2e)", () => {
     await app.init();
   });
 
-  it("/ (GET)", () => {
-    return request(app.getHttpServer()).get("/").expect(200).expect("Hello World!");
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it("rejects anonymous requests", async () => {
+    const response = await request(app.getHttpServer()).get("/");
+
+    expect(response.status).toBe(401);
+    expect(response.headers["www-authenticate"]).toBe('Basic realm="Restricted Area", charset="UTF-8"');
   });
 });

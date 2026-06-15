@@ -9,22 +9,22 @@
     "target": "ESNext",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["node"],
+    "tsBuildInfoFile": ".cache/.tsbuildinfo",
     "incremental": true,
     "skipLibCheck": true,
+    "strict": true,
     "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "paths": {
-      "@/*": ["src/*"],
-      "@type/*": ["types/*"]
+      "@/*": ["./src/*"],
+      "@type/*": ["./types/*"],
+      "@test/*": ["./test/*"]
     },
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "test/**/*"]
 }

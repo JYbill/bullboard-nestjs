@@ -2,34 +2,34 @@ import fs from "node:fs";
 import path from "node:path";
 import { plainToInstance } from "class-transformer";
 import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, validateSync } from "class-validator";
-import { type BullmqConfigItem } from "@type/config";
+import { type BullmqConfigItem } from "@type/config.js";
 
 const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
 
 class BullmqConfigEntity implements BullmqConfigItem {
   @IsString()
-  host: string;
+  host!: string;
 
   @IsNumber()
-  port: number;
+  port!: number;
 
   @IsString()
-  password: string;
+  password!: string;
 
   @IsNumber()
-  dbNum: number;
+  dbNum!: number;
 
   @IsOptional()
   @IsString()
   prefix?: string;
 
   @IsString()
-  bullPrefix: string;
+  bullPrefix!: string;
 
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
-  queues: string[];
+  queues!: string[];
 }
 
 /** 读取并校验 BullMQ 队列配置文件。 */
