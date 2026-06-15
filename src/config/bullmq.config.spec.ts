@@ -86,6 +86,15 @@ describe("loadBullmqConfig", () => {
     expect(() => loadBullmqConfig(appRoot)).toThrow("校验失败");
   });
 
+  // 目的：区分空的配置文件数组和单项配置中允许为空的队列列表。
+  // 总结：至少配置一个队列连接才允许启动。
+  it("rejects a config file without any queue connection", () => {
+    writeBullmqConfig([]);
+
+    // 期待：加载配置时提示至少填写一项队列配置。
+    expect(() => loadBullmqConfig(appRoot)).toThrow("BullMQ 配置文件至少要包含一项队列配置");
+  });
+
   it("strips undeclared properties from valid config", () => {
     writeBullmqConfig([{ ...completeConfigItem, undeclared: "removed" }]);
 
