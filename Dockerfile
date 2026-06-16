@@ -1,9 +1,5 @@
 FROM node:26-slim AS base
 WORKDIR /app
-RUN echo "deb http://mirrors.aliyun.com/debian/ bookworm main" > /etc/apt/sources.list && \
-  echo "deb http://mirrors.aliyun.com/debian/ bookworm-updates main" >> /etc/apt/sources.list && \
-  echo "deb http://mirrors.aliyun.com/debian-security/ bookworm-security main" >> /etc/apt/sources.list && \
-  rm -rf /etc/apt/sources.list.d/*
 RUN apt-get update && \
   apt-get install -y --no-install-recommends openssl build-essential python3 && \
   apt-get clean && \
@@ -42,10 +38,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV LANG=C.utf8
 ENV LC_ALL=C.utf8
-RUN echo "deb http://mirrors.aliyun.com/debian/ bookworm main" > /etc/apt/sources.list && \
-  echo "deb http://mirrors.aliyun.com/debian/ bookworm-updates main" >> /etc/apt/sources.list && \
-  echo "deb http://mirrors.aliyun.com/debian-security/ bookworm-security main" >> /etc/apt/sources.list && \
-  rm -rf /etc/apt/sources.list.d/*
 RUN apt-get update && \
   apt-get install -y --no-install-recommends openssl build-essential python3 bash vim curl procps && \
   apt-get clean && \
