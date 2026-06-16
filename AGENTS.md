@@ -56,11 +56,17 @@ pnpm test:e2e
 
 由于目前基础设施没有实现种子环境，新增模块、文件都应该有对应的 `*.spec.ts` 和 `*.integration-spec.ts`，这两个文件放在源码同级目录。
 
-# 类型声明
+# TypeScript 文件位置与规则
 
-- 全局通用类型放在 `types/` 下，并通过 `@type/*` 导入。
+- 应用源码 `.ts` 文件放在 `src/` 下；e2e 测试放在 `test/` 下；项目根目录只放 `vitest.config.ts`、`oxlint.config.ts`、`oxfmt.config.ts` 这类工具配置文件，不放业务源码。
+- 新增源码文件时，同级目录补对应的 `*.spec.ts` 和 `*.integration-spec.ts`；`*.e2e-spec.ts` 只放在 `test/` 目录内。
+- 全局通用类型声明放在 `types/` 下，并通过 `@type/*` 导入。
 - 只服务某个源码文件的 `type` / `interface` 放到源码同层的 `源码名.d.ts` 文件中，例如 `bullmq.config.ts` 对应 `bullmq.config.d.ts`。
 - 不使用 `*.types.d.ts` 这类额外命名；类型文件名要直接跟随对应源码文件名。
+- TypeScript 模块遵循 `NodeNext` 和 `verbatimModuleSyntax`；类型只参与编译时使用 `import type`，不要新增 CommonJS 风格的 `require` / `module.exports`。
+- 同层文件或同层目录内导入允许使用 `./xxx`；跨上层或下层目录导入必须使用 `tsconfig.json` 中已配置的路径别名：`@/*` 对应 `src/*`，`@type/*` 对应 `types/*`，`@test/*` 对应 `test/*`。
+- 合并来自同一路径的 `import` 和 `import type`，不要拆成两条导入。
+- 精确修复 TypeScript 类型问题。不要使用 `any`、`unknown`、`as any`、`as unknown as ...` 掩盖类型问题；通过补齐参数类型、返回值类型、配置类型、请求/响应类型、类型守卫或更准确的类型定义解决。
 
 # 代码组织与 NestJS 约定
 
@@ -71,11 +77,8 @@ pnpm test:e2e
 - 导出的函数和每个 `static` 类方法上方都要添加 `/** ... */` JSDoc。
 - 对不明显的业务逻辑添加简短行内注释；不要解释语法本身。
 - 禁止新增业务魔法数字。状态值、类型值、开关值、任务值等先抽到语义明确的 `enum/**` 后再使用。
-- 同层文件或同层目录内导入允许使用 `./xxx`；跨上层或下层目录导入必须使用 `tsconfig.json` 中已配置的路径别名：`@/*` 对应 `src/*`，`@type/*` 对应 `types/*`，`@test/*` 对应 `test/*`。
-- 合并来自同一路径的 `import` 和 `import type`，不要拆成两条导入。
 - 避免过度封装。不要为了形式整洁抽取只有四行左右、没有复用价值或业务语义的小函数。
 - SQL 别名使用完整或清晰有意义的单词，不要新增 `stc`、`ct` 这类难读缩写。
-- 精确修复 TypeScript 类型问题。不要使用 `any`、`unknown`、`as any`、`as unknown as ...` 掩盖类型问题；通过补齐参数类型、返回值类型、配置类型、请求/响应类型、类型守卫或更准确的类型定义解决。
 
 # 标准文档
 

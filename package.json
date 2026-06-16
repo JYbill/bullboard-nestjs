@@ -7,7 +7,7 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "skills:update": "skills add https://github.com/JYbill/xqv-skills --copy -a universal claude-code -y -s ddt -s notes -s summary -s upgrade-project",
+    "skills:update": "skills add https://github.com/JYbill/xqv-skills --copy -a universal claude-code -y -s ddt -s notes -s summary -s upgrade-project -s test-optimize",
     "prepare": "husky",
     "build": "nest build",
     "typecheck": "tsc --noEmit",
@@ -15,7 +15,6 @@
     "start": "node --enable-source-maps dist/main.js",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node --enable-source-maps dist/main.js",
     "lint": "oxlint --config oxlint.config.ts src test --fix",
     "test": "vitest run --project test --passWithNoTests",
     "test:watch": "vitest --project test",
@@ -26,20 +25,20 @@
     "deploy:docker:local": "bash ./docker-build.sh -p x86-debian -s"
   },
   "dependencies": {
-    "@bull-board/api": "^6.10.1",
-    "@bull-board/express": "^6.10.1",
+    "@bull-board/api": "^8.0.0",
+    "@bull-board/express": "^8.0.0",
     "@nestjs/common": "^11.1.27",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.27",
     "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/platform-express": "^11.1.27",
     "@swc/helpers": "^0.5.23",
-    "bullmq": "^5.42.0",
+    "bullmq": "^5.78.1",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
-    "ioredis": "^5.10.1",
+    "class-validator": "^0.15.1",
+    "ioredis": "^5.11.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.23",

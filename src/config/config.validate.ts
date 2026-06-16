@@ -5,7 +5,7 @@ import path from "node:path";
 import { Expose, plainToInstance } from "class-transformer";
 import { IsNumber, IsString, validateSync } from "class-validator";
 import { loadBullmqConfig } from "./bullmq.config.js";
-import { type BullmqConfigItem } from "@type/config.js";
+import type { BullmqConfigItem } from "./bullmq.config.d.js";
 
 class EnvConfig implements IEnv {
   @IsNumber()

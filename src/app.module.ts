@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { createBullBoard } from "@bull-board/api";
@@ -5,9 +7,9 @@ import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { Queue, RedisConnection, type RedisOptions } from "bullmq";
 import { validateConfig } from "@/config/config.validate.js";
-import { BULL_BOARD_QUEUE_DELIMITER } from "@/enum/app.enum.js";
+import { BULL_BOARD_QUEUE_DELIMITER, BULLMQ_REDIS_CONNECT_TIMEOUT_MS } from "@/enum/app.enum.js";
 import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware.js";
-import type { BullmqConfigItem } from "@type/config.js";
+import type { BullmqConfigItem } from "@/config/bullmq.config.d.js";
 
 @Module({
   imports: [
@@ -31,12 +33,7 @@ export class AppModule implements NestModule {
     // 显式配置和 Redis 自动发现都先归一成 Bull Board 适配器列表。
     const queueAdapterList: BullMQAdapter[] = [];
     for (const config of configList) {
-      const connectOption: RedisOptions = {
-        host: config.host,
-        port: config.port,
-        password: config.password,
-        db: config.dbNum,
-      };
+      const connectOption = this.buildRedisOptions(config);
       const prefix = config.prefix;
       const bullPrefix = config.bullPrefix;
       // queues 为空表示以 Redis 当前数据为准，避免配置文件重复维护实际队列列表。
@@ -70,6 +67,37 @@ export class AppModule implements NestModule {
     });
     // Bull Board 路由和静态资源统一经过基础认证，避免根路径下出现未鉴权入口。
     consumer.apply(BasicAuthMiddleware, serverAdapter.getRouter()).forRoutes("/");
+  }
+
+  /** 把配置文件里的 Redis 连接字段转换成 ioredis 可识别的连接参数。 */
+  private buildRedisOptions(config: BullmqConfigItem): RedisOptions {
+    // 基础连接字段按配置原样透传，dbNum 对应 ioredis 的 db。
+    const connectOption: RedisOptions = {
+      host: config.host,
+      port: config.port,
+      password: config.password,
+      db: config.dbNum,
+      connectTimeout: config.timeout ?? BULLMQ_REDIS_CONNECT_TIMEOUT_MS,
+    };
+
+    // username 只有非空时才传入，避免空字符串触发 ACL 认证分支。
+    const username = config.username?.trim();
+    if (username !== undefined && username.length > 0) {
+      connectOption.username = username;
+    }
+
+    // TLS 证书路径来自配置文件，读取成 Buffer 后交给 ioredis。
+    const caPath = config.ca?.trim();
+    const clientCertPath = config.clientCert?.trim();
+    const clientKeyPath = config.clientKey?.trim();
+    if (caPath || clientCertPath || clientKeyPath) {
+      connectOption.tls = {
+        ca: caPath ? fs.readFileSync(path.resolve(process.cwd(), caPath)) : undefined,
+        cert: clientCertPath ? fs.readFileSync(path.resolve(process.cwd(), clientCertPath)) : undefined,
+        key: clientKeyPath ? fs.readFileSync(path.resolve(process.cwd(), clientKeyPath)) : undefined,
+      };
+    }
+    return connectOption;
   }
 
   /** 从 Redis 中发现当前 BullMQ prefix 下已有的队列名称。 */

@@ -6,7 +6,7 @@
 
 - NestJS 升级、`nestjs latest`、`@nestjs/*` 升级；
 - `source-map-support`、`--enable-source-maps`、Node.js source map；
-- `package.json` 的 `start`、`start:prod`、`typecheck` 脚本；
+- `package.json` 的 `start`、`typecheck` 脚本，以及需要移除的 `start:prod` 脚本；
 - `pm2.config.cjs` 的 Node.js 启动参数；
 - `.swcrc`、`@swc/core`、`@swc/cli`、`@swc/helpers`、`compilerOptions.builder.type: "swc"`、`swcrcPath`；
 - Prisma 7 `prisma-client`、`schema.prisma`、`importFileExtension`、`generatedFileExtension`，或 Docker / NestJS SWC 构建后生成的 Prisma Client 在 `dist` 中引用 `.ts` 后缀；
@@ -22,7 +22,7 @@
 
 1. 将项目中已有的 NestJS 直接依赖升级到 latest，依赖分区保持原样。
 2. 移除 `source-map-support` 及其注册代码，改用 Node.js 原生 source map 能力。
-3. 将 `package.json` 中直接用 `node` 运行编译产物的脚本加上 `--enable-source-maps`，默认 `scripts.start` 和 `scripts.start:prod` 都使用 `node --enable-source-maps dist/main.js`。
+3. 将 `package.json` 的 `scripts.start` 设置为 `node --enable-source-maps dist/main.js`，并移除 `scripts.start:prod`，避免保留两个等价的生产启动入口。
 4. 确保 `pm2.config.cjs` 中启动编译产物的应用配置包含 `node_args: "--enable-source-maps"`。
 5. 确保 `package.json` 存在并使用精确的 `scripts.typecheck: "tsc --noEmit"`。
 6. 确保 `nest-cli.json` 的 `compilerOptions.deleteOutDir` 为 `true`。
@@ -41,7 +41,7 @@
 - 检查 `package.json`、锁文件、`nest-cli.json`、`.swcrc`、NestJS 配置、Prisma schema / config、测试框架配置和启动入口。
 - 升级已经存在的 `@nestjs/*` 直接依赖，例如 `@nestjs/common`、`@nestjs/core`、`@nestjs/platform-*`、`@nestjs/config`、`@nestjs/swagger`、`@nestjs/testing`、`@nestjs/cli`、`@nestjs/schematics` 等。
 - 移除 `source-map-support`、`@types/source-map-support` 直接依赖，以及 `import "source-map-support/register"`、`require("source-map-support/register")`、`sourceMapSupport.install()` 等注册代码。
-- 修改所有直接用 `node` 运行编译产物的脚本，确保带 `--enable-source-maps`；默认包括 `scripts.start` 和 `scripts.start:prod`。
+- 将 `scripts.start` 设置为 `node --enable-source-maps dist/main.js`，并删除 `scripts.start:prod`；其它项目既有、直接用 `node` 运行编译产物的脚本也要确保带 `--enable-source-maps`，但不要新增 `start:prod`。
 - 同步 `pm2.config.cjs` 的 `node_args: "--enable-source-maps"`。
 - 修改 `scripts.typecheck` 到 `tsc --noEmit`。
 - 将 `nest-cli.json` 的 `compilerOptions.deleteOutDir` 设置为 `true`。
@@ -78,9 +78,9 @@
         ▼
 是否存在 source-map-support？
         │
-        ├─ 是：删除依赖和注册代码，并给所有 node 运行编译产物的脚本加 --enable-source-maps
+        ├─ 是：删除依赖和注册代码，设置 scripts.start，删除 start:prod，并给其它 node 运行编译产物的既有脚本加 --enable-source-maps
         │
-        └─ 否：仍检查所有 node 运行编译产物的脚本是否已启用 Node source map
+        └─ 否：仍设置 scripts.start，删除 start:prod，并检查其它 node 运行编译产物的既有脚本是否已启用 Node source map
         │
         ▼
 检查 pm2.config.cjs
@@ -138,7 +138,7 @@
 1. 检查当前工作区是否有未提交改动，避免覆盖用户已有修改。
 2. 读取 `package.json`、锁文件、`nest-cli.json`、`.swcrc`、`pm2.config.cjs`、`prisma.config.ts` 和 `schema.prisma`：
    - `dependencies` / `devDependencies` 中的 `@nestjs/*`、`source-map-support`、`@types/source-map-support`、`tsconfig-paths`、`@swc/core`、`@swc/cli`、`@swc/helpers`；
-   - `scripts.start`、`scripts.start:prod`、`scripts.typecheck`、`scripts.build`、`scripts.test`；
+   - `scripts.start`、是否存在需要删除的 `scripts.start:prod`、`scripts.typecheck`、`scripts.build`、`scripts.test`；
    - 所有直接使用 `node` 运行 `dist` 编译产物的脚本；
    - `pm2.config.cjs` 中启动编译产物的应用配置；
    - `compilerOptions.deleteOutDir`、`compilerOptions.builder`、`swcrcPath`、`compilerOptions.rootDir`；
@@ -148,7 +148,7 @@
 3. 判断包管理器：优先按 `pnpm-lock.yaml`、`package-lock.json`、`yarn.lock`、`bun.lockb`。
 4. 升级已有 NestJS 直接依赖到 latest，保持 dependencies / devDependencies 分区，不随意新增不在项目中的 NestJS 包。
 5. 移除 `source-map-support` 直接依赖和注册代码。
-6. 将所有直接使用 `node` 运行 `dist` 编译产物的脚本加上 `--enable-source-maps`；默认 `scripts.start` 和 `scripts.start:prod` 都使用 `node --enable-source-maps dist/main.js`。
+6. 将 `scripts.start` 设置为 `node --enable-source-maps dist/main.js`，删除 `scripts.start:prod`；其它项目既有、直接使用 `node` 运行 `dist` 编译产物的脚本要加上 `--enable-source-maps`，但不要新增 `start:prod`。
 7. 如果存在 `pm2.config.cjs` 且应用通过 PM2 启动编译产物，确保对应应用配置包含 `node_args: "--enable-source-maps"`。
 8. 确保 `scripts.typecheck` 为 `tsc --noEmit`。如果已有但不一致，改到目标值并在汇报里说明原值。
 9. 确保 `nest-cli.json` 的 `compilerOptions.deleteOutDir` 为 `true`。
@@ -172,7 +172,8 @@
 - 删除 `source-map-support` 和 `@types/source-map-support` 直接依赖。
 - 删除源码中的 `source-map-support/register` 注册和 `sourceMapSupport.install()`。
 - 将 `package.json` 中所有直接使用 `node` 运行 `dist` 编译产物的脚本加上 `--enable-source-maps`。
-- 默认 `scripts.start` 和 `scripts.start:prod` 都设置为 `node --enable-source-maps dist/main.js`。
+- 将 `scripts.start` 设置为 `node --enable-source-maps dist/main.js`。
+- 删除 `scripts.start:prod`，不要保留两个等价的生产启动入口。
 - 如果存在 `pm2.config.cjs` 且应用通过 PM2 启动编译产物，同步加入 `node_args: "--enable-source-maps"`。
 - 如果项目的构建输出入口不是 `dist/main.js`，先核对实际 NestJS 构建配置；没有明确证据时按本迁移目标设置，并在汇报里说明。
 
@@ -328,7 +329,7 @@ import * as Prisma from "./internal/prismaNamespace.js"
 - 已有 `@nestjs/*` 直接依赖已升级到 latest，依赖分区未被无故改变。
 - `package.json` 不再直接依赖 `source-map-support` 和 `@types/source-map-support`。
 - 源码不再注册 `source-map-support`。
-- `package.json` 中直接使用 `node` 运行 `dist` 编译产物的脚本都包含 `--enable-source-maps`，默认 `scripts.start` 和 `scripts.start:prod` 为 `node --enable-source-maps dist/main.js`。
+- `package.json` 的 `scripts.start` 为 `node --enable-source-maps dist/main.js`，并且不存在 `scripts.start:prod`；其它项目既有、直接使用 `node` 运行 `dist` 编译产物的脚本都包含 `--enable-source-maps`。
 - 如果存在 `pm2.config.cjs` 且通过 PM2 启动编译产物，应用配置包含 `node_args: "--enable-source-maps"`。
 - `scripts.typecheck` 为 `tsc --noEmit`。
 - `nest-cli.json` 的 `compilerOptions.deleteOutDir` 为 `true`。

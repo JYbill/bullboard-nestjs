@@ -2,9 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { plainToInstance } from "class-transformer";
 import { IsArray, IsNumber, IsOptional, IsString, validateSync } from "class-validator";
-import { type BullmqConfigItem } from "@type/config.js";
+import type { BullmqConfigItem } from "./bullmq.config.d.js";
 
 const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
+
+const hasConfigPath = (configPath: string | undefined): boolean =>
+  configPath !== undefined && configPath.trim().length > 0;
 
 class BullmqConfigEntity implements BullmqConfigItem {
   @IsString()
@@ -16,6 +19,22 @@ class BullmqConfigEntity implements BullmqConfigItem {
   @IsString()
   password!: string;
 
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  ca?: string;
+
+  @IsOptional()
+  @IsString()
+  clientCert?: string;
+
+  @IsOptional()
+  @IsString()
+  clientKey?: string;
+
   @IsNumber()
   dbNum!: number;
 
@@ -25,6 +44,10 @@ class BullmqConfigEntity implements BullmqConfigItem {
 
   @IsString()
   bullPrefix!: string;
+
+  @IsOptional()
+  @IsNumber()
+  timeout?: number;
 
   @IsArray()
   @IsString({ each: true })
@@ -67,6 +90,15 @@ export function loadBullmqConfig(appRoot: string): BullmqConfigItem[] {
     const errors = validateSync(configItem);
     if (errors.length > 0) {
       throw new Error(`BullMQ 配置文件第 ${index + 1} 项校验失败 ${configFilePath}，详情 ${errors.toString()}`);
+    }
+
+    const hasClientCert = hasConfigPath(configItem.clientCert);
+    const hasClientKey = hasConfigPath(configItem.clientKey);
+    if (hasClientCert !== hasClientKey) {
+      const missingConfigName = hasClientCert ? "clientKey" : "clientCert";
+      throw new Error(
+        `BullMQ 配置文件第 ${index + 1} 项 TLS 客户端证书配置不完整 ${configFilePath}，clientCert 和 clientKey 必须同时填写或同时留空，缺少 ${missingConfigName}`,
+      );
     }
   }
 

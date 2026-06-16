@@ -19,11 +19,17 @@
       "skillPath": "skills/summary/SKILL.md",
       "computedHash": "0f3440e658c9fd0e242968c5aa2ecd35659aea31041635f2d91a556af45b378c"
     },
+    "test-optimize": {
+      "source": "JYbill/xqv-skills",
+      "sourceType": "github",
+      "skillPath": "skills/test-optimize/SKILL.md",
+      "computedHash": "113b7a0cce71dadd86c1f95b8352530f944ca950d59a698fa032accb145db06a"
+    },
     "upgrade-project": {
       "source": "JYbill/xqv-skills",
       "sourceType": "github",
       "skillPath": "skills/upgrade-project/SKILL.md",
-      "computedHash": "599f3963e984bbc00980d78eb6c1c385e9fa04bec6893f94759f6948f0fa426f"
+      "computedHash": "ef1358d018f70f18b0f627db93c2cde52ba70c63ff0623c1034c58faf20e6ea9"
     }
   }
 }
