@@ -4,23 +4,23 @@
     "host": "127.0.0.1",
     // Redis 端口
     "port": 6379,
-    // Redis 用户名，默认用户或未启用 ACL 时可以留空字符串
+    // （可选）Redis 用户名，默认用户或未启用 ACL 时可以留空字符串
     "username": "",
     // Redis 密码，没有可以留空字符串
     "password": "<redis-password>",
-    // Redis TLS CA 证书路径；私有 CA 或自签证书时填写，例如 ./ca.cer，未启用 TLS 可留空
+    // （可选）Redis TLS CA 证书路径；私有 CA 或自签证书时填写，例如 ./ca.cer，未启用 TLS 可留空
     "ca": "",
-    // Redis TLS 客户端证书路径；启用双向 TLS 时和 clientKey 一起填写，例如 ./client.cer
+    // （可选）Redis TLS 客户端证书路径；启用双向 TLS 时和 clientKey 一起填写，例如 ./client.cer
     "clientCert": "",
-    // Redis TLS 客户端私钥路径；启用双向 TLS 时和 clientCert 一起填写，例如 ./client.key
+    // （可选）Redis TLS 客户端私钥路径；启用双向 TLS 时和 clientCert 一起填写，例如 ./client.key
     "clientKey": "",
     // Redis DB 库号
     "dbNum": 0,
     // BullMQ 的 prefix，必填
     "bullPrefix": "bull",
-    // Redis 连接超时时间，单位毫秒；可省略，默认 5000
+    // （可选）Redis 连接超时时间，单位毫秒；默认 5000
     "timeout": 5000,
-    // Bull Board 展示前缀，可省略；Bull Board 会按 # 拆展示树，避免队列名中的 - 被拆成多级目录
+    // （可选）Bull Board 展示前缀；Bull Board 会按 # 拆展示树，避免队列名中的 - 被拆成多级目录
     "prefix": "app#",
     // 要展示的队列名列表；为空数组时自动展示该 Redis DB 内当前 prefix 下的所有 BullMQ 队列
     "queues": ["example-queue"]
