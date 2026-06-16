@@ -8,6 +8,10 @@
 - 包含查看、增加等基于 bull-board 的简单交互。
 - ❌ bull-board 自定义选项未提取到环境变量。
 
+## 界面预览
+
+![Bull Dashboard 首页](docs/images/home_page.png)
+
 ## 镜像地址
 
 Docker Hub：<https://hub.docker.com/r/jyxiaoqinvar/bullboard/tags>
