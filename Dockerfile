@@ -11,10 +11,8 @@ RUN npm install -g pnpm && npm cache clean -f
 FROM base AS install
 COPY package.json .
 RUN npm pkg delete scripts.prepare
-COPY .npmrc .
 COPY pnpm-lock.yaml .
 RUN pnpm --version
-RUN pnpm config list
 RUN pnpm install --frozen-lockfile && pnpm store prune
 COPY . .
 
@@ -50,7 +48,6 @@ RUN pm2 install pm2-logrotate && \
   pm2 set pm2-logrotate:retain 7
 COPY --from=build /app/package.json .
 RUN npm pkg delete scripts.prepare
-COPY --from=build /app/.npmrc .
 COPY --from=build /app/pnpm-lock.yaml .
 RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 COPY --from=build /app/pm2.config.cjs .

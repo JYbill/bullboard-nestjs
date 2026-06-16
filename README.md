@@ -18,10 +18,6 @@
 - 本地构建条件
   - 已安装docker
   - nodejs v22环境(我的开发环境)
-- 将Dockerfile中的`http://192.168.88.115:8081/repository/npm-proxy/`替换成npm镜像源
-```ts
-// 比如淘宝镜像源: https://registry.npmmirror.com
-```
 
 ## 构建方式:构建docker tar包
 -  构建方式：构建成docker tar包
