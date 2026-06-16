@@ -135,6 +135,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value={{branch}}_{{sha}}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: build push
         uses: docker/build-push-action@v7
