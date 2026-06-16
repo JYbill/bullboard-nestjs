@@ -115,8 +115,12 @@ services:
     volumes:
       - ./env:/app/env
       - ./logs:/app/logs
+      # （可选）覆盖镜像内置 PM2 配置；不挂载时使用镜像自带的 /app/pm2.config.cjs
+      # - ./pm2.config.cjs:/app/pm2.config.cjs:ro
     restart: unless-stopped
 ```
+
+`pm2.config.cjs` 挂载是可选内容。默认情况下镜像会使用内置的 `/app/pm2.config.cjs`；需要自定义 PM2 运行参数时，可以参考本仓库根目录的 `pm2.config.cjs` 作为默认配置，复制到部署目录后取消上方挂载注释。确认理解每个配置项含义后，可以自行修改。PM2 配置文档：<https://pm2.keymetrics.io/docs/usage/application-declaration/>。
 
 启动和管理：
 

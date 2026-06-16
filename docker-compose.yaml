@@ -11,6 +11,8 @@ services:
     volumes:
       - $PWD/env:/app/env
       - $PWD/logs:/app/logs
+      # （可选）覆盖镜像内置 PM2 配置；不挂载时使用镜像自带的 /app/pm2.config.cjs
+      # - $PWD/pm2.config.cjs:/app/pm2.config.cjs:ro
       - /etc/localtime:/etc/localtime
       - /etc/vimrc:/etc/vim/vimrc
     restart: unless-stopped
