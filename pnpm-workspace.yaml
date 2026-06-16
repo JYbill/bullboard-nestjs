@@ -1,0 +1,4 @@
+minimumReleaseAge: 720
+allowBuilds:
+  '@swc/core': true
+  msgpackr-extract: true
