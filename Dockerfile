@@ -12,6 +12,7 @@ FROM base AS install
 COPY package.json .
 RUN npm pkg delete scripts.prepare
 COPY pnpm-lock.yaml .
+COPY pnpm-workspace.yaml .
 RUN pnpm --version
 RUN pnpm install --frozen-lockfile && pnpm store prune
 COPY . .
@@ -49,6 +50,7 @@ RUN pm2 install pm2-logrotate && \
 COPY --from=build /app/package.json .
 RUN npm pkg delete scripts.prepare
 COPY --from=build /app/pnpm-lock.yaml .
+COPY --from=build /app/pnpm-workspace.yaml .
 RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 COPY --from=build /app/pm2.config.cjs .
 COPY --from=build /app/dist dist
