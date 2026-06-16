@@ -3,11 +3,13 @@
 变更：
 - 已将项目现有 `@nestjs/*` 直接依赖升级到 latest，并保持原 dependencies / devDependencies 分区。
 - 已移除 `source-map-support` / `@types/source-map-support` 及注册代码。
-- `package.json` 中直接用 `node` 运行编译产物的脚本已加 `--enable-source-maps`，默认 `start` / `start:prod` 为 `node --enable-source-maps dist/src/main.js`。
+- `package.json` 中直接用 `node` 运行编译产物的脚本已加 `--enable-source-maps`，默认 `start` / `start:prod` 为 `node --enable-source-maps dist/main.js`。
+- `tsconfig.json` 模板未新增 `compilerOptions.rootDir`；如项目既有 `rootDir`，已按实际产物路径同步启动入口。
 - `pm2.config.cjs` 已同步 `node_args: "--enable-source-maps"`。
 - `package.json` 的 `typecheck` 已设置为 `tsc --noEmit`。
 - `nest-cli.json` 的 `compilerOptions.deleteOutDir` 已设置为 `true`。
 - NestJS SWC builder 已通过 `swcrcPath: ".swcrc"` 指向根目录 `.swcrc`，`.swcrc` 已保留装饰器元数据并设置 `module.ignoreDynamic: true`。
+- 如项目使用 Prisma 7 `prisma-client` 生成器，`schema.prisma` 的 `generator client` 已显式设置 `moduleFormat = "esm"`、`generatedFileExtension = "ts"`、`importFileExtension = "js"`，避免编译后 Prisma Client 在 `dist` 中继续引用 `.ts` 后缀。
 - 当前项目使用 Vitest，已移除 `tsconfig-paths` 直接依赖及相关旧测试链路残留。
 - 如用户要求同步 Dockerfile，`x86-debian.Dockerfile` 已按模板更新；如未要求，说明未处理 Dockerfile。
 

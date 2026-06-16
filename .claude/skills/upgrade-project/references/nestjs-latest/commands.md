@@ -5,6 +5,13 @@ pnpm typecheck
 pnpm build
 ```
 
+如果本次调整了 Prisma 7 `prisma-client` 生成器配置，先运行项目已有生成命令，再构建：
+
+```bash
+pnpm prisma:generate
+pnpm build
+```
+
 如果本次影响了 SWC / Vitest / Vite 配置或测试依赖，再运行相关测试：
 
 ```bash

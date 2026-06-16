@@ -78,6 +78,7 @@ package-lock.json
 
 .opencode
 nul
+.github
 .claude/settings.local.json
 .claude/worktree
 docs/plan/

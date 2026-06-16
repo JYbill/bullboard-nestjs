@@ -1,6 +1,6 @@
 ---
 name: upgrade-project
-description: 当用户要求升级、现代化、迁移或统一 JavaScript/TypeScript 项目的工具链、框架、测试、构建、部署和项目规范时使用这个技能。覆盖 Prettier/Oxfmt、ESLint/Oxlint、Jest/Vitest、CJS/ESM、NestJS latest、SWC、Dockerfile/.dockerignore/docker-build.sh、.gitignore、AGENTS.md/CLAUDE.md 等迁移；用户提到“升级项目”“迁移技术栈”“替换旧工具”“项目标准化”“沉淀成规范”或相关工具名时，应优先使用。
+description: 当用户要求升级、现代化、迁移或统一 JavaScript/TypeScript 项目的工具链、框架、测试、构建、部署和项目规范时使用这个技能。覆盖 Prettier/Oxfmt、ESLint/Oxlint、Jest/Vitest、CJS/ESM、NestJS latest、SWC、Prisma Client 生成器、Dockerfile/.dockerignore/docker-build.sh、.gitignore、AGENTS.md/CLAUDE.md 等迁移；用户提到“升级项目”“迁移技术栈”“替换旧工具”“项目标准化”“沉淀成规范”或相关工具名时，应优先使用。
 metadata:
   tags: 升级, 迁移, 重构, 工具链, javascript, typescript
 ---
@@ -79,7 +79,7 @@ metadata:
 - `references/docker-build/index.md`：Docker 构建与部署流程。任务提到 Dockerfile、`.dockerignore`、`x86-debian.Dockerfile`、`docker-build.sh`、`deploy:docker`、`docker build`、`docker push`、镜像发布、`images.tar`，或要求统一后台项目 Docker 构建和部署入口时，先读取这个文件；构建命令见 `commands.md`，`package.json` 脚本见 `package.md`，`.dockerignore` 见 `dockerignore.md`，Dockerfile 见 `dockerfile.md`，汇报模板见 `report.md`。
 - `references/gitignore/index.md`：Git 忽略规则模板。任务提到 `.gitignore`、gitignore、忽略文件、提交忽略规则，或要求统一后台项目本地配置、缓存、日志、环境文件、上传目录和 AI/agent 工作目录的忽略规则时，先读取这个文件；`.gitignore` 模板见 `gitignore.md`，汇报模板见 `report.md`。
 - `references/cjs-esm/index.md`：TypeScript 项目的 CommonJS/CJS 到 ESM 迁移。任务提到 `"type": "module"`、`verbatimModuleSyntax`、`import type`、CJS 转 ESM、模块系统迁移，或迁移后需要修复类型导入错误时，先读取这个文件；`package.json` 片段见 `package.md`，`tsconfig.json` 片段见 `tsconfig.md`，类型导入/导出示例见 `imports.md` / `exports.md`，类型检查命令见 `typecheck.md`，汇报模板见 `report.md`。
-- `references/nestjs-latest/index.md`：NestJS 项目升级到 latest。任务提到 NestJS 升级、`@nestjs/*`、`source-map-support`、`--enable-source-maps`、`typecheck`、`tsconfig-paths`、NestJS SWC builder、`.swcrc`、`@swc/core`、`@swc/cli`、`@swc/helpers`，或要求把 NestJS 后台项目升级到最新版本 / 同步 NestJS SWC 配置时，先读取这个文件；脚本模板见 `package.md`，`tsconfig.json` 模板见 `tsconfig.md`，`nest-cli.json` 模板见 `nest-cli.md`，`.swcrc` 模板见 `swcrc.md`，依赖命令见 `dependencies.md`，Dockerfile 模板见 `dockerfile.md`，汇报模板见 `report.md`。
+- `references/nestjs-latest/index.md`：NestJS 项目升级到 latest。任务提到 NestJS 升级、`@nestjs/*`、`source-map-support`、`--enable-source-maps`、`typecheck`、`tsconfig-paths`、NestJS SWC builder、`.swcrc`、`@swc/core`、`@swc/cli`、`@swc/helpers`、Prisma 7 `prisma-client`、`schema.prisma`，或要求把 NestJS 后台项目升级到最新版本 / 同步 NestJS SWC 配置时，先读取这个文件；脚本模板见 `package.md`，`tsconfig.json` 模板见 `tsconfig.md`，`nest-cli.json` 模板见 `nest-cli.md`，`.swcrc` 模板见 `swcrc.md`，Prisma Client 生成器配置见 `prisma-client.md`，依赖命令见 `dependencies.md`，Dockerfile 模板见 `dockerfile.md`，汇报模板见 `report.md`。
 
 ## 汇报要求
 

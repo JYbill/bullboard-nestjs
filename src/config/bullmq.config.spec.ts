@@ -3,31 +3,34 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadBullmqConfig } from "./bullmq.config.js";
+import {
+  TEST_BULLMQ_BULL_PREFIX,
+  TEST_BULLMQ_QUEUE_NAME,
+  TEST_REDIS_DB,
+  TEST_REDIS_HOST,
+  TEST_REDIS_PORT,
+} from "@/enum/test.enum.js";
 import { type BullmqConfigItem } from "@type/config.js";
-
-const REDIS_PORT = 6379;
-const REDIS_DB = 0;
-const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 const completeConfigItem = {
-  host: "127.0.0.1",
-  port: REDIS_PORT,
+  host: TEST_REDIS_HOST,
+  port: TEST_REDIS_PORT,
   password: "redis-password",
-  dbNum: REDIS_DB,
-  bullPrefix: "bull",
+  dbNum: TEST_REDIS_DB,
+  bullPrefix: TEST_BULLMQ_BULL_PREFIX,
   prefix: "app-",
-  queues: ["example-queue"],
+  queues: [TEST_BULLMQ_QUEUE_NAME],
 } satisfies BullmqConfigItem;
 
 const configItemWithoutPrefix = {
-  host: "127.0.0.1",
-  port: REDIS_PORT,
+  host: TEST_REDIS_HOST,
+  port: TEST_REDIS_PORT,
   password: "",
-  dbNum: REDIS_DB,
-  bullPrefix: "bull",
-  queues: ["example-queue"],
+  dbNum: TEST_REDIS_DB,
+  bullPrefix: TEST_BULLMQ_BULL_PREFIX,
+  queues: [TEST_BULLMQ_QUEUE_NAME],
 } satisfies BullmqConfigItem;
 
 const invalidConfigCases: Array<[string, JsonValue]> = [
@@ -37,9 +40,8 @@ const invalidConfigCases: Array<[string, JsonValue]> = [
   ["dbNum 不是数字", [{ ...completeConfigItem, dbNum: "0" }]],
   ["bullPrefix 不是字符串", [{ ...completeConfigItem, bullPrefix: 123456 }]],
   ["prefix 不是字符串", [{ ...completeConfigItem, prefix: 123456 }]],
-  ["queues 不是数组", [{ ...completeConfigItem, queues: "example-queue" }]],
-  ["queues 是空数组", [{ ...completeConfigItem, queues: [] }]],
-  ["queues 包含非字符串项", [{ ...completeConfigItem, queues: ["example-queue", 123456] }]],
+  ["queues 不是数组", [{ ...completeConfigItem, queues: TEST_BULLMQ_QUEUE_NAME }]],
+  ["queues 包含非字符串项", [{ ...completeConfigItem, queues: [TEST_BULLMQ_QUEUE_NAME, 123456] }]],
 ];
 
 describe("loadBullmqConfig", () => {
@@ -55,7 +57,7 @@ describe("loadBullmqConfig", () => {
   });
 
   const writeBullmqConfig = (config: JsonValue) => {
-    fs.writeFileSync(path.join(appRoot, BULLMQ_CONFIG_RELATIVE_PATH), JSON.stringify(config));
+    fs.writeFileSync(path.join(appRoot, "env/bullmq.config.json"), JSON.stringify(config));
   };
 
   it("loads a complete valid config matching the template", () => {
@@ -68,6 +70,13 @@ describe("loadBullmqConfig", () => {
     writeBullmqConfig([configItemWithoutPrefix]);
 
     expect(loadBullmqConfig(appRoot)).toEqual([configItemWithoutPrefix]);
+  });
+
+  it("allows empty queues for Redis auto discovery", () => {
+    const configItemWithEmptyQueues = { ...completeConfigItem, queues: [] } satisfies BullmqConfigItem;
+    writeBullmqConfig([configItemWithEmptyQueues]);
+
+    expect(loadBullmqConfig(appRoot)).toEqual([configItemWithEmptyQueues]);
   });
 
   it.each(invalidConfigCases)("rejects invalid config when %s", (_caseName, config) => {

@@ -7,7 +7,7 @@ module.exports = {
   apps: [
     {
       name: "rag",
-      script: "./dist/src/main.js",
+      script: "./dist/main.js",
       node_args: "--enable-source-maps",
       cwd: "./",
       instances: 1,

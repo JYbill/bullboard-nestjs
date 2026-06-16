@@ -24,7 +24,7 @@
 2. **按真实目录裁剪。** 模板中不存在于当前项目的目录可以删除；项目存在但模板未覆盖的本地缓存、日志、运行产物应补充。
 3. **环境文件默认忽略。** `env/.env`、开发/生产环境变量、本地 TLS 文件等默认不入库；如果某个环境样例需要提交，应使用 `.example`、`.sample` 等明确命名。
 4. **保留占位文件例外。** 忽略目录内容时，如果项目依赖空目录存在，使用 `!<dir>/.gitkeep` 这类例外规则保留占位文件。
-5. **不要忽略源码和规范文件。** 不要为了减少噪音忽略 `src/`、`docs/spec/`、`AGENTS.md`、`CLAUDE.md`、`.github/` 等应被版本管理的项目资产；除非项目明确把某类过程性文档视为本地工作区，如当前模板中的 `docs/plan/`。GitHub Actions 工作流和仓库配置通常需要入库，不要默认使用 `.github` 或 `.github/*` 忽略整个目录。
+5. **不要忽略源码和规范文件。** 不要为了减少噪音忽略 `src/`、`docs/spec/`、`AGENTS.md`、`CLAUDE.md` 等应被版本管理的项目资产；除非项目明确把某类过程性文档视为本地工作区，如当前模板中的 `docs/plan/`。
 6. **AI/agent 本地目录默认忽略。** `.ai`、`.aiassistant`、`.sisyphus`、`.opencode`、`.claude/settings.local.json`、`.claude/worktree` 等本地工作状态不应入库。
 7. **不要隐藏锁文件差异。** 当前模板忽略 `package-lock.json` 是因为项目使用 pnpm；迁移到 npm 项目时不要保留这一项，应改为保留 `package-lock.json` 并按实际包管理器忽略无关锁文件。
 

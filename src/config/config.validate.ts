@@ -2,13 +2,10 @@
  * @Description: Config Module 校验配置变量
  */
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Expose, plainToInstance } from "class-transformer";
 import { IsNumber, IsString, validateSync } from "class-validator";
 import { loadBullmqConfig } from "./bullmq.config.js";
 import { type BullmqConfigItem } from "@type/config.js";
-
-const CONFIG_DIRECTORY_PATH = path.dirname(fileURLToPath(import.meta.url));
 
 class EnvConfig implements IEnv {
   @IsNumber()
@@ -44,7 +41,7 @@ export function validateConfig(config: Record<string, unknown>) {
     throw new Error(errors.toString());
   }
 
-  validatedConfig.APP_ROOT = path.resolve(CONFIG_DIRECTORY_PATH, "../../");
+  validatedConfig.APP_ROOT = path.resolve(process.cwd());
   // 启动期先读取 JSON 文件，后续统一从 ConfigService 里获取。
   validatedConfig.BULLMQ_CONFIG = loadBullmqConfig(validatedConfig.APP_ROOT);
   return validatedConfig;

@@ -161,8 +161,6 @@ RUN pnpm build
 - 只安装生产依赖：`pnpm install --prod --frozen-lockfile`。
 - 复制项目真实运行所需文件，例如 `pm2.config.cjs`、`dist`、`src`、`views`。
 - 如果 PM2 启动编译产物，`pm2.config.cjs` 中应包含 `node_args: "--enable-source-maps"`，保证线上日志映射到源码行号。
-- 生产阶段可以保留 `procps`，用于线上排查时使用 `ps`、`top`、`free`、`pgrep`、`pkill` 等进程和资源观察命令。
-- 生产阶段不要默认安装音视频处理工具；只有项目真实存在转码、抽帧或媒体探测需求时才按项目事实添加。
 - 暴露项目真实端口。
 - 使用 `pm2-runtime pm2.config.cjs` 或项目实际启动命令启动。
 

@@ -51,7 +51,7 @@ RUN echo "deb http://mirrors.aliyun.com/debian/ bookworm main" > /etc/apt/source
   echo "deb http://mirrors.aliyun.com/debian-security/ bookworm-security main" >> /etc/apt/sources.list && \
   rm -rf /etc/apt/sources.list.d/*
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends openssl build-essential python3 bash vim curl procps && \
+  apt-get install -y --no-install-recommends openssl build-essential python3 bash vim curl ffmpeg procps && \
   apt-get clean && \
   apt-get autoclean && \
   apt-get autoremove -y && \

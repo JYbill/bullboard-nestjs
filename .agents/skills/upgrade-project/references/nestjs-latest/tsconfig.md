@@ -10,7 +10,6 @@
     "target": "ESNext",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
     "noEmit": true,
     "types": ["node"],
     "incremental": true,

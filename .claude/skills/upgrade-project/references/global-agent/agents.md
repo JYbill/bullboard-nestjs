@@ -72,12 +72,6 @@
 └── package.json          # 脚本、依赖与包管理器声明
 ```
 
-# 导入要求
-
-- 同层文件或同层目录内导入允许使用 `./xxx`。
-- TypeScript 项目跨上层或下层目录导入必须使用 `tsconfig.json` 中配置的路径别名。
-- Node.js 原生 TypeScript 项目跨上层或下层目录导入必须使用 `package.json` 的 `imports` 别名。
-
 # 类型声明
 
 - 全局通用类型放在 `src/types/` 下。

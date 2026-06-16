@@ -7,7 +7,7 @@
 
 验证：
 - 已检查 `git status --short`，确认没有把应提交文件误忽略。
-- 已确认 `.github/`、文档或配置样例等需要入库的仓库资产未被模板误忽略。
+- 如项目有需要入库的 `.github/`、文档或配置样例，已确认未被模板误忽略。
 
 注意：
 - Docker 构建上下文排除规则不在 `.gitignore` 中处理，应读取 `references/docker-build/index.md` 的 `.dockerignore` 模板。

@@ -10,9 +10,9 @@
     "dbNum": 0,
     // BullMQ 的 prefix，必填
     "bullPrefix": "bull",
-    // Bull Board 展示前缀，可省略
-    "prefix": "app-",
-    // 要展示的队列名列表
+    // Bull Board 展示前缀，可省略；建议以 @ 结尾用于分组
+    "prefix": "app@",
+    // 要展示的队列名列表；为空数组时自动展示该 Redis DB 内当前 prefix 下的所有 BullMQ 队列
     "queues": ["example-queue"]
   }
 ]

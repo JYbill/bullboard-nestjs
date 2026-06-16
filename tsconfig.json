@@ -9,7 +9,6 @@
     "target": "ESNext",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
     "noEmit": true,
     "types": ["node"],
     "tsBuildInfoFile": ".cache/.tsbuildinfo",

@@ -56,6 +56,12 @@ pnpm test:e2e
 
 由于目前基础设施没有实现种子环境，新增模块、文件都应该有对应的 `*.spec.ts` 和 `*.integration-spec.ts`，这两个文件放在源码同级目录。
 
+# 类型声明
+
+- 全局通用类型放在 `types/` 下，并通过 `@type/*` 导入。
+- 只服务某个源码文件的 `type` / `interface` 放到源码同层的 `源码名.d.ts` 文件中，例如 `bullmq.config.ts` 对应 `bullmq.config.d.ts`。
+- 不使用 `*.types.d.ts` 这类额外命名；类型文件名要直接跟随对应源码文件名。
+
 # 代码组织与 NestJS 约定
 
 - Controller 保持薄层，只负责参数接收、鉴权入口和响应组装；业务判断放在 service 或明确的逻辑层。

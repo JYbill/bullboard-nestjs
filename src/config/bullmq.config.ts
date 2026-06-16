@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { plainToInstance } from "class-transformer";
-import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, validateSync } from "class-validator";
+import { IsArray, IsNumber, IsOptional, IsString, validateSync } from "class-validator";
 import { type BullmqConfigItem } from "@type/config.js";
 
 const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
@@ -27,7 +27,6 @@ class BullmqConfigEntity implements BullmqConfigItem {
   bullPrefix!: string;
 
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   queues!: string[];
 }
