@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - ".claude/**"
+      - ".agents/**"
+      - ".husky/**"
+      - ".run/**"
+      - "docs/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "README.md"
   workflow_dispatch:
 
 permissions:

@@ -1,7 +1,7 @@
 # 部署模板
 services:
   bullboard:
-    image: 192.168.88.115:8082/bullboard:x86-origin-develop_xqv_501b64a2da
+    image: jyxiaoqinvar/bullboard:latest
     container_name: bullboard
     ports:
       - "9110:9110"
