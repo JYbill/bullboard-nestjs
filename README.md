@@ -62,8 +62,8 @@ BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab7828
     "dbNum": 0,
     // BullMQ 的 prefix，必填
     "bullPrefix": "bull",
-    // （可选）Redis 连接超时时间，单位毫秒；默认 5000
-    "timeout": 5000,
+    // （可选）Redis 连接超时时间，单位毫秒；默认 10000
+    "timeout": 10000,
     // （可选）Bull Board 展示前缀；Bull Board 会按 # 拆展示树，避免队列名中的 - 被拆成多级目录
     "prefix": "app#",
     // 要展示的队列名列表；为空数组时自动展示该 Redis DB 内当前 prefix 下的所有 BullMQ 队列

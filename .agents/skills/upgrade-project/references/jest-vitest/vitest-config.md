@@ -28,7 +28,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "e2e",
-          include: ["test/**/*.e2e-spec.ts"],
+          include: ["src/**/*.spec.ts", "src/**/*.integration-spec.ts", "test/**/*.e2e-spec.ts"],
           fileParallelism: false,
         },
       },

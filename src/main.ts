@@ -8,6 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
   });
+  app.enableShutdownHooks();
   const logger = new Logger(bootstrap.name);
   const configService = app.get(ConfigService<IEnv>);
   const port = configService.getOrThrow<number>("PORT");

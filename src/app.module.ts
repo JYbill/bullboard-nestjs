@@ -1,15 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
+import { Logger, Module, type MiddlewareConsumer, type NestModule, type OnApplicationShutdown } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { Queue, RedisConnection, type RedisOptions } from "bullmq";
 import { validateConfig } from "@/config/config.validate.js";
-import { BULL_BOARD_QUEUE_DELIMITER, BULLMQ_REDIS_CONNECT_TIMEOUT_MS } from "@/enum/app.enum.js";
+import {
+  BULL_BOARD_QUEUE_DELIMITER,
+  BULLMQ_REDIS_CONNECT_TIMEOUT_MS,
+  BULLMQ_REDIS_PING_INTERVAL_MS,
+} from "@/enum/app.enum.js";
 import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware.js";
 import type { BullmqConfigItem } from "@/config/bullmq.config.d.js";
+import type { RedisPingClient } from "./app.module.d.js";
 
 @Module({
   imports: [
@@ -22,7 +27,12 @@ import type { BullmqConfigItem } from "@/config/bullmq.config.d.js";
     }),
   ],
 })
-export class AppModule implements NestModule {
+export class AppModule implements NestModule, OnApplicationShutdown {
+  private readonly logger = new Logger(AppModule.name);
+  private readonly queueList: Queue[] = [];
+  private redisPingTimer?: NodeJS.Timeout;
+  private isRedisPingRunning = false;
+
   /** 注入配置服务，用于读取已校验的 BullMQ 面板配置。 */
   constructor(private readonly config: ConfigService<IEnv>) {}
 
@@ -41,6 +51,7 @@ export class AppModule implements NestModule {
         config.queues.length === 0 ? await this.discoverBullmqQueueNames(connectOption, bullPrefix) : config.queues;
       const queues = queueNameList.map((queueName: string) => {
         const queue = new Queue(queueName, { connection: connectOption, prefix: bullPrefix });
+        this.queueList.push(queue);
         // 使用独立分隔符，避免队列名中的连字符被 Bull Board 展示成多级树。
         const adapterOptions =
           prefix === undefined
@@ -67,6 +78,53 @@ export class AppModule implements NestModule {
     });
     // Bull Board 路由和静态资源统一经过基础认证，避免根路径下出现未鉴权入口。
     consumer.apply(BasicAuthMiddleware, serverAdapter.getRouter()).forRoutes("/");
+    if (this.queueList.length > 0) {
+      this.redisPingTimer = setInterval(() => {
+        void this.pingRedisConnections();
+      }, BULLMQ_REDIS_PING_INTERVAL_MS);
+    }
+  }
+
+  /** 应用关闭时释放心跳定时器和 BullMQ 队列连接。 */
+  async onApplicationShutdown(): Promise<void> {
+    if (this.redisPingTimer !== undefined) {
+      clearInterval(this.redisPingTimer);
+      this.redisPingTimer = undefined;
+    }
+
+    await Promise.all(this.queueList.map((queue) => queue.close()));
+  }
+
+  /** 定时探活 Bull Board 持有的 Redis 连接，减少空闲 TLS 连接被中间网络回收后的首包失败。 */
+  private async pingRedisConnections(): Promise<void> {
+    // 网络超时时单轮心跳可能超过 30 秒，跳过重叠轮次，避免探活请求堆积。
+    if (this.isRedisPingRunning) {
+      return;
+    }
+
+    this.isRedisPingRunning = true;
+    try {
+      // 单个队列连接失败不阻断其它队列心跳，统一汇总结果后分别记录日志。
+      const pingResultList = await Promise.allSettled(
+        this.queueList.map(async (queue) => {
+          const redis = (await queue.waitUntilReady()) as RedisPingClient;
+          await redis.ping();
+        }),
+      );
+
+      for (const [index, pingResult] of pingResultList.entries()) {
+        const queueName = this.queueList[index].name;
+        if (pingResult.status === "fulfilled") {
+          this.logger.log(`BullMQ Redis 心跳成功，queue=${queueName}`);
+          continue;
+        }
+
+        const errorMessage = pingResult.reason instanceof Error ? pingResult.reason.message : "未知错误";
+        this.logger.warn(`BullMQ Redis 心跳失败，queue=${queueName}，原因 ${errorMessage}`);
+      }
+    } finally {
+      this.isRedisPingRunning = false;
+    }
   }
 
   /** 把配置文件里的 Redis 连接字段转换成 ioredis 可识别的连接参数。 */

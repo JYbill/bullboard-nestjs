@@ -19,7 +19,7 @@ module.exports = {
       error_file: "logs/err.log",
       out_file: "logs/out.log",
       merge_logs: true,
-      log_date_format: "YYYY-MM-DD HH:mm Z",
+      log_date_format: "",
       env: {
         NODE_ENV: "production",
       },
@@ -28,4 +28,4 @@ module.exports = {
 };
 ```
 
-迁移时按项目事实保留 `name`、`instances`、日志路径等字段，但 `node_args: "--enable-source-maps"` 必须同步到实际 PM2 配置。
+迁移时按项目事实保留 `name`、`instances`、日志路径等字段，但 `node_args: "--enable-source-maps"` 必须同步到实际 PM2 配置；模板默认使用 `log_date_format: ""` 避免 PM2 给应用日志额外添加时间前缀。

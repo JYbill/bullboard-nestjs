@@ -2,4 +2,7 @@
 export const BULL_BOARD_QUEUE_DELIMITER = "#";
 
 /** BullMQ Redis 默认连接超时时间，单位毫秒。 */
-export const BULLMQ_REDIS_CONNECT_TIMEOUT_MS = 5000;
+export const BULLMQ_REDIS_CONNECT_TIMEOUT_MS = 10000;
+
+/** BullMQ Redis 心跳间隔，单位毫秒。 */
+export const BULLMQ_REDIS_PING_INTERVAL_MS = 30000;

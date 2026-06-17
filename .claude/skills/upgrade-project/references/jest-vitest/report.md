@@ -3,7 +3,7 @@
 变更：
 - 新增或更新 `vitest.config.ts`，使用 `test` / `e2e` projects 区分普通测试和 e2e。
 - `test` project 覆盖 `*.spec.ts` 和 `*.integration-spec.ts`。
-- `e2e` project 覆盖 `test/**/*.e2e-spec.ts`，并关闭文件级并行。
+- `e2e` project 覆盖 `*.spec.ts`、`*.integration-spec.ts` 和 `test/**/*.e2e-spec.ts`，并关闭文件级并行。
 - 测试脚本改为 `test` / `test:watch` / `test:cov`，均指向 `test` project（单元测试和集成测试）。
 - 测试代码从 Jest API 改为 Vitest API。
 - 移除 Jest 配置文件、`package.json` 的 `jest` 配置字段和 Jest 相关直接依赖。
