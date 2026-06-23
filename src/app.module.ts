@@ -11,10 +11,11 @@ import {
   BULL_BOARD_QUEUE_DELIMITER,
   BULLMQ_REDIS_CONNECT_TIMEOUT_MS,
   BULLMQ_REDIS_PING_INTERVAL_MS,
+  BULLMQ_REDIS_SCAN_COUNT,
 } from "@/enum/app.enum.js";
 import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware.js";
 import type { BullmqConfigItem } from "@/config/bullmq.config.d.js";
-import type { RedisPingClient } from "./app.module.d.js";
+import type { RedisClientItem, RedisPingClient } from "./app.module.d.js";
 
 @Module({
   imports: [
@@ -30,6 +31,8 @@ import type { RedisPingClient } from "./app.module.d.js";
 export class AppModule implements NestModule, OnApplicationShutdown {
   private readonly logger = new Logger(AppModule.name);
   private readonly queueList: Queue[] = [];
+  private readonly redisClientList: RedisClientItem[] = [];
+  private readonly loggedQueueErrorSet = new WeakSet<Error>();
   private redisPingTimer?: NodeJS.Timeout;
   private isRedisPingRunning = false;
 
@@ -46,11 +49,37 @@ export class AppModule implements NestModule, OnApplicationShutdown {
       const connectOption = this.buildRedisOptions(config);
       const prefix = config.prefix;
       const bullPrefix = config.bullPrefix;
-      // queues 为空表示以 Redis 当前数据为准，避免配置文件重复维护实际队列列表。
-      const queueNameList =
-        config.queues.length === 0 ? await this.discoverBullmqQueueNames(connectOption, bullPrefix) : config.queues;
+      const redisClientItem = await this.createRedisClient(connectOption, config);
+      let queueNameList: string[];
+      try {
+        // queues 为空表示以 Redis 当前数据为准，避免配置文件重复维护实际队列列表。
+        queueNameList =
+          config.queues.length === 0
+            ? await this.discoverBullmqQueueNames(redisClientItem.client, bullPrefix)
+            : config.queues;
+      } catch (error) {
+        await this.closeRedisClient(redisClientItem);
+        throw error;
+      }
+
+      if (queueNameList.length === 0) {
+        await this.closeRedisClient(redisClientItem);
+        continue;
+      }
+
+      this.redisClientList.push(redisClientItem);
       const queues = queueNameList.map((queueName: string) => {
-        const queue = new Queue(queueName, { connection: connectOption, prefix: bullPrefix });
+        const queue = new Queue(queueName, { connection: redisClientItem.client, prefix: bullPrefix });
+        queue.on("error", (error: Error) => {
+          if (this.loggedQueueErrorSet.has(error)) {
+            return;
+          }
+
+          this.loggedQueueErrorSet.add(error);
+          this.logger.warn(
+            `BullMQ 队列连接异常，redis=${redisClientItem.label}，queue=${queue.name}，原因 ${error.message}`,
+          );
+        });
         this.queueList.push(queue);
         // 使用独立分隔符，避免队列名中的连字符被 Bull Board 展示成多级树。
         const adapterOptions =
@@ -78,21 +107,22 @@ export class AppModule implements NestModule, OnApplicationShutdown {
     });
     // Bull Board 路由和静态资源统一经过基础认证，避免根路径下出现未鉴权入口。
     consumer.apply(BasicAuthMiddleware, serverAdapter.getRouter()).forRoutes("/");
-    if (this.queueList.length > 0) {
+    if (this.redisClientList.length > 0) {
       this.redisPingTimer = setInterval(() => {
         void this.pingRedisConnections();
       }, BULLMQ_REDIS_PING_INTERVAL_MS);
     }
   }
 
-  /** 应用关闭时释放心跳定时器和 BullMQ 队列连接。 */
+  /** 应用关闭时释放心跳定时器、BullMQ 队列和共享 Redis 连接。 */
   async onApplicationShutdown(): Promise<void> {
     if (this.redisPingTimer !== undefined) {
       clearInterval(this.redisPingTimer);
       this.redisPingTimer = undefined;
     }
 
-    await Promise.all(this.queueList.map((queue) => queue.close()));
+    await Promise.allSettled(this.queueList.map((queue) => queue.close()));
+    await Promise.allSettled(this.redisClientList.map((redisClientItem) => this.closeRedisClient(redisClientItem)));
   }
 
   /** 定时探活 Bull Board 持有的 Redis 连接，减少空闲 TLS 连接被中间网络回收后的首包失败。 */
@@ -104,23 +134,22 @@ export class AppModule implements NestModule, OnApplicationShutdown {
 
     this.isRedisPingRunning = true;
     try {
-      // 单个队列连接失败不阻断其它队列心跳，统一汇总结果后分别记录日志。
+      // 同一 Redis 配置只保留一个共享连接，避免每个队列各自 PING 造成瞬时连接压力。
       const pingResultList = await Promise.allSettled(
-        this.queueList.map(async (queue) => {
-          const redis = (await queue.waitUntilReady()) as RedisPingClient;
-          await redis.ping();
+        this.redisClientList.map(async ({ client }) => {
+          await client.ping();
         }),
       );
 
       for (const [index, pingResult] of pingResultList.entries()) {
-        const queueName = this.queueList[index].name;
+        const redisLabel = this.redisClientList[index].label;
         if (pingResult.status === "fulfilled") {
-          this.logger.log(`BullMQ Redis 心跳成功，queue=${queueName}`);
+          this.logger.debug(`BullMQ Redis 心跳成功，redis=${redisLabel}`);
           continue;
         }
 
         const errorMessage = pingResult.reason instanceof Error ? pingResult.reason.message : "未知错误";
-        this.logger.warn(`BullMQ Redis 心跳失败，queue=${queueName}，原因 ${errorMessage}`);
+        this.logger.warn(`BullMQ Redis 心跳失败，redis=${redisLabel}，原因 ${errorMessage}`);
       }
     } finally {
       this.isRedisPingRunning = false;
@@ -158,33 +187,52 @@ export class AppModule implements NestModule, OnApplicationShutdown {
     return connectOption;
   }
 
+  /** 创建同一配置下所有队列共享的 Redis 客户端。 */
+  private async createRedisClient(connectOption: RedisOptions, config: BullmqConfigItem): Promise<RedisClientItem> {
+    const label = `${config.host}:${config.port},db=${config.dbNum},prefix=${config.bullPrefix}`;
+    const connection = new RedisConnection(connectOption, { blocking: false });
+    connection.on("error", (error: Error) => {
+      this.logger.warn(`BullMQ Redis 连接异常，redis=${label}，原因 ${error.message}`);
+    });
+    const client = (await connection.client) as RedisPingClient;
+    return { client, connection, label };
+  }
+
+  /** 关闭 AppModule 直接持有的共享 Redis 客户端。 */
+  private async closeRedisClient(redisClientItem: RedisClientItem): Promise<void> {
+    if (redisClientItem.client.status === "end") {
+      return;
+    }
+
+    try {
+      await redisClientItem.connection.close();
+    } catch {
+      redisClientItem.client.disconnect();
+    }
+  }
+
   /** 从 Redis 中发现当前 BullMQ prefix 下已有的队列名称。 */
-  private async discoverBullmqQueueNames(connectOption: RedisOptions, bullPrefix: string): Promise<string[]> {
-    const redisConnection = new RedisConnection(connectOption);
+  private async discoverBullmqQueueNames(redis: RedisPingClient, bullPrefix: string): Promise<string[]> {
     const queueNameSet = new Set<string>();
     let cursor = "0";
 
     // 使用 SCAN 分批查找队列 meta key，避免启动时用 KEYS 阻塞 Redis。
-    try {
-      const redis = await redisConnection.client;
-      do {
-        const [nextCursor, keys] = await redis.scan(cursor, {
-          MATCH: `${bullPrefix}:*:meta`,
-          COUNT: 100,
-        });
-        cursor = nextCursor;
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, {
+        MATCH: `${bullPrefix}:*:meta`,
+        COUNT: BULLMQ_REDIS_SCAN_COUNT,
+      });
+      cursor = nextCursor;
 
-        // 只从合法 meta key 提取队列名，跳过其它 BullMQ 内部 key。
-        for (const key of keys) {
-          const queueName = this.parseQueueNameFromMetaKey(key, bullPrefix);
-          if (queueName !== undefined) {
-            queueNameSet.add(queueName);
-          }
+      // 只从合法 meta key 提取队列名，跳过其它 BullMQ 内部 key。
+      for (const key of keys) {
+        const queueName = this.parseQueueNameFromMetaKey(key, bullPrefix);
+        if (queueName !== undefined) {
+          queueNameSet.add(queueName);
         }
-      } while (cursor !== "0");
-    } finally {
-      await redisConnection.close();
-    }
+      }
+    } while (cursor !== "0");
+
     return Array.from(queueNameSet).sort((firstQueueName, secondQueueName) =>
       firstQueueName.localeCompare(secondQueueName),
     );
