@@ -1,17 +1,5 @@
-/**
- * Bullmq队列配置项
- */
-export type BullmqConfigItem = {
-  host: string;
-  port: number;
-  password: string;
-  username?: string;
-  ca?: string;
-  clientCert?: string;
-  clientKey?: string;
-  dbNum: number;
-  prefix?: string;
-  bullPrefix: string;
-  timeout?: number;
-  queues: string[];
-};
+import type { z } from "zod";
+import type { bullmqConfigItemSchema } from "./bullmq.config.js";
+
+/** BullMQ 队列配置项。 */
+export type BullmqConfigItem = z.infer<typeof bullmqConfigItemSchema>;

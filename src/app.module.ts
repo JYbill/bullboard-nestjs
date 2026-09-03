@@ -6,7 +6,7 @@ import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { Queue, RedisConnection, type RedisOptions } from "bullmq";
-import { validateConfig } from "@/config/config.validate.js";
+import { envConfigSchema } from "@/config/config.validate.js";
 import {
   BULL_BOARD_QUEUE_DELIMITER,
   BULLMQ_REDIS_CONNECT_TIMEOUT_MS,
@@ -15,6 +15,7 @@ import {
 } from "@/enum/app.enum.js";
 import { BasicAuthMiddleware } from "@/middleware/base-auth.middleware.js";
 import type { BullmqConfigItem } from "@/config/bullmq.config.d.js";
+import type { EnvConfig } from "@/config/config.validate.d.js";
 import type { RedisClientItem, RedisPingClient } from "./app.module.d.js";
 
 @Module({
@@ -24,7 +25,7 @@ import type { RedisClientItem, RedisPingClient } from "./app.module.d.js";
       isGlobal: true,
       cache: true,
       expandVariables: true,
-      validate: validateConfig,
+      validationSchema: envConfigSchema,
     }),
   ],
 })
@@ -37,7 +38,7 @@ export class AppModule implements NestModule, OnApplicationShutdown {
   private isRedisPingRunning = false;
 
   /** 注入配置服务，用于读取已校验的 BullMQ 面板配置。 */
-  constructor(private readonly config: ConfigService<IEnv>) {}
+  constructor(private readonly config: ConfigService<EnvConfig>) {}
 
   /** 创建 Bull Board 路由，并把面板挂载到 Nest 中间件链路。 */
   async configure(consumer: MiddlewareConsumer): Promise<void> {

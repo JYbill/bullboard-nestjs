@@ -76,6 +76,8 @@ build/Release
 /env/.production.env
 env/bullmq.config.json
 /env/tls/*
+/env/*.cer
+/env/*.key
 mise.local.toml
 
 # Generated docs and process files

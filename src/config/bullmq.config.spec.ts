@@ -12,8 +12,7 @@ import {
   TEST_REDIS_PORT,
 } from "@/enum/test.enum.js";
 import type { BullmqConfigItem } from "./bullmq.config.d.js";
-
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+import type { JsonValue } from "./bullmq.config.spec.d.js";
 
 const completeConfigItem = {
   host: TEST_REDIS_HOST,
@@ -85,5 +84,11 @@ describe("loadBullmqConfig", () => {
 
     // 期待：字段类型不合法时统一抛出校验失败错误。
     expect(() => loadBullmqConfig(appRoot)).toThrow("校验失败");
+  });
+
+  it("strips undeclared properties from valid config", () => {
+    writeBullmqConfig([{ ...completeConfigItem, undeclared: "removed" }]);
+
+    expect(loadBullmqConfig(appRoot)).toEqual([completeConfigItem]);
   });
 });

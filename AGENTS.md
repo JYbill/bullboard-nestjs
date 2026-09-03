@@ -1,9 +1,9 @@
 # 技术栈
 
-- 运行时与语言：Node.js、TypeScript 5、NestJS 11，TypeScript 模块配置遵循 `tsconfig.json` 的 `NodeNext`。
+- 运行时与语言：Node.js、TypeScript 6、NestJS 12，TypeScript 模块配置遵循 `tsconfig.json` 的 `NodeNext`。
 - HTTP 与管理界面：`@nestjs/platform-express`、Express、`@bull-board/api`、`@bull-board/express`。
-- 队列与缓存连接：BullMQ 5、ioredis，Redis 连接和队列定义通过配置装配。
-- 配置与校验：`@nestjs/config`、`class-validator`、`class-transformer`。
+- 队列与缓存连接：BullMQ 6、ioredis 6，Redis 连接和队列定义通过配置装配。
+- 配置与校验：`@nestjs/config`、Zod 4、NestJS Standard Schema。
 - 测试与质量工具：Vitest、unplugin-swc、Supertest、Oxlint、Oxfmt。
 - 包管理与构建：pnpm、Nest CLI，Docker 构建入口只在明确要求时使用。
 
@@ -34,7 +34,7 @@ pnpm test:e2e
 ## `*.spec.ts`
 
 - 单元测试。
-- 只测试纯代码逻辑、DTO、工具函数、service 分支。
+- 只测试纯代码逻辑、Schema、工具函数、service 分支。
 - 不访问真实数据库，不访问外部服务。
 
 ## `*.integration-spec.ts`
@@ -72,8 +72,11 @@ pnpm test:e2e
 
 - Controller 保持薄层，只负责参数接收、鉴权入口和响应组装；业务判断放在 service 或明确的逻辑层。
 - 写操作放在 `*-modify.ts`，读操作放在 `*-query.ts`，共享可复用能力保留在 common service 文件中；只有编排逻辑确实 substantial 时才移入 `logic/`。
-- DTO 负责请求结构和校验语义，不要把业务流程塞进 DTO。
-- 配置项必须经过配置校验和类型声明；涉及环境变量时同步更新校验文件和类型声明文件。
+- 请求校验使用 Zod Schema 和全局 `StandardSchemaValidationPipe`；需要校验的 `@Body()`、`@Query()`、`@Param()`、`@RawBody()` 参数必须显式传入 `{ schema }`。
+- Schema 放在对应模块的 `*.schema.ts`；输入和输出类型使用 `z.infer<typeof schema>` 推导，不重复维护 class DTO 或 interface。
+- 输入转换使用 `z.coerce.*` 或 `z.preprocess()` 显式表达；`z.object()` 默认剔除未知字段，必须拒绝未知字段时使用 `z.strictObject()`。
+- 环境变量通过 Zod 和 `ConfigModule.forRoot({ validationSchema })` 在启动阶段校验，配置类型从 Schema 推导；不新增 `class-validator`、`class-transformer` 或 `@nestjs/mapped-types`。
+- 只有接口响应确实需要运行时裁剪或校验时，才使用 `StandardSchemaSerializerInterceptor` 和 `@SerializeOptions({ schema })`。
 - 导出的函数和每个 `static` 类方法上方都要添加 `/** ... */` JSDoc。
 - 对不明显的业务逻辑添加简短行内注释；不要解释语法本身。
 - 禁止新增业务魔法数字。状态值、类型值、开关值、任务值等先抽到语义明确的 `enum/**` 后再使用。
