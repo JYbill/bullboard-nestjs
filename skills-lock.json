@@ -5,13 +5,13 @@
       "source": "JYbill/xqv-skills",
       "sourceType": "github",
       "skillPath": "skills/ddt/SKILL.md",
-      "computedHash": "36db7fc74db6ed1b5674ba76e58773cb12c968622e2a49a769527da4a52fbfac"
+      "computedHash": "d1b038f9a38b310c51b4e47013b9329e76be3b3368ab22c695d44402c28eccc6"
     },
     "notes": {
       "source": "JYbill/xqv-skills",
       "sourceType": "github",
       "skillPath": "skills/notes/SKILL.md",
-      "computedHash": "c3b04963617af15b3234226c1641141c25de5cbe81c82a66787e10a19fe231f5"
+      "computedHash": "305bf3e8a5c0cca0d0b7529abb6c90418595ee8802f20c959d80864320655852"
     },
     "summary": {
       "source": "JYbill/xqv-skills",
@@ -23,13 +23,13 @@
       "source": "JYbill/xqv-skills",
       "sourceType": "github",
       "skillPath": "skills/test-optimize/SKILL.md",
-      "computedHash": "113b7a0cce71dadd86c1f95b8352530f944ca950d59a698fa032accb145db06a"
+      "computedHash": "693a410b156b3e3e13c7f43880fb7d30d9968a35fd12739ca184d184b64d3339"
     },
     "upgrade-project": {
       "source": "JYbill/xqv-skills",
       "sourceType": "github",
       "skillPath": "skills/upgrade-project/SKILL.md",
-      "computedHash": "f8fc2fdecdb00612070f4302cb374236f798bed71f6e22e4e0ff031586ed7287"
+      "computedHash": "c597ac07a2c42d7d4c058191d4a1fbefd1451ac4f11bef08dcf6761b2b05ce7d"
     }
   }
 }
