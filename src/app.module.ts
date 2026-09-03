@@ -105,6 +105,11 @@ export class AppModule implements NestModule, OnApplicationShutdown {
     } = createBullBoard({
       queues: queueAdapterList,
       serverAdapter: serverAdapter,
+      options: {
+        uiConfig: {
+          hideRedisDetails: true,
+        },
+      },
     });
     // Bull Board 路由和静态资源统一经过基础认证，避免根路径下出现未鉴权入口。
     consumer.apply(BasicAuthMiddleware, serverAdapter.getRouter()).forRoutes("/");
