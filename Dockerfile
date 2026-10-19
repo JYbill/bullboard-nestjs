@@ -6,13 +6,14 @@ RUN apt-get update && \
   apt-get autoclean && \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-RUN npm install -g pnpm && npm cache clean -f
+RUN npm install -g pnpm@12.10.1 && npm cache clean -f
 
 FROM base AS install
 COPY package.json .
 RUN npm pkg delete scripts.prepare
 COPY pnpm-lock.yaml .
 COPY pnpm-workspace.yaml .
+COPY patches patches
 RUN pnpm --version
 RUN pnpm install --frozen-lockfile && pnpm store prune
 COPY . .
@@ -43,7 +44,7 @@ RUN apt-get update && \
   apt-get autoclean && \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-RUN npm install -g pm2 pnpm && npm cache clean -f
+RUN npm install -g pm2 pnpm@12.10.1 && npm cache clean -f
 RUN pm2 install pm2-logrotate && \
   pm2 set pm2-logrotate:max_size 200M && \
   pm2 set pm2-logrotate:retain 7
@@ -51,6 +52,7 @@ COPY --from=build /app/package.json .
 RUN npm pkg delete scripts.prepare
 COPY --from=build /app/pnpm-lock.yaml .
 COPY --from=build /app/pnpm-workspace.yaml .
+COPY --from=build /app/patches patches
 RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 COPY --from=build /app/pm2.config.cjs .
 COPY --from=build /app/dist dist

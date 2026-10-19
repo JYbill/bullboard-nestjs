@@ -66,9 +66,11 @@ BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab7828
     "timeout": 10000,
     // （可选）Bull Board 展示前缀；Bull Board 会按 # 拆展示树，避免队列名中的 - 被拆成多级目录
     "prefix": "app#",
+    // 队列协议：bullmq（默认）或 bull；旧 Bull 必须显式填写非空 queues
+    "queueType": "bullmq",
     // 要展示的队列名列表；为空数组时自动展示该 Redis DB 内当前 prefix 下的所有 BullMQ 队列
-    "queues": ["example-queue"]
-  }
+    "queues": ["example-queue"],
+  },
 ]
 ```
 

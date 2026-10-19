@@ -1,0 +1,12 @@
+diff --git a/dist/index.ejs b/dist/index.ejs
+index d347f0d8ddb7f1575a9044b88ea424b760ca9c5c..4d7663e219dcde662bb823e3e09ddcc77376be9a 100644
+--- a/dist/index.ejs
++++ b/dist/index.ejs
+@@ -8,7 +8,6 @@
+     <title><%= title %></title>
+     <link rel="alternate icon" type="image/png" href="<%= favIconAlternative %>">
+     <link rel="icon" type="image/svg+xml" id="fav-logo" href="<%= favIconDefault %>">
+-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+ <link href="static/css/main.88d71b4bd7.css" rel="stylesheet"></head>
+ <body class="preload">
+ <script id="__UI_CONFIG__" type="application/json"><%- uiConfig %></script>

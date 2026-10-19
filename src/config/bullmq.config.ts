@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
+import { QueueType } from "@/enum/app.enum.js";
 import type { BullmqConfigItem } from "./bullmq.config.d.js";
 
 const BULLMQ_CONFIG_RELATIVE_PATH = "env/bullmq.config.json";
@@ -20,8 +21,13 @@ export const bullmqConfigItemSchema = z
     bullPrefix: z.string(),
     timeout: z.number().optional(),
     queues: z.array(z.string()),
+    queueType: z.enum(QueueType).optional(),
   })
   .superRefine((config, context) => {
+    // 旧 Bull 不具备 BullMQ 的 meta 键，要求显式列出队列，避免误识别。
+    if (config.queueType === QueueType.Bull && config.queues.length === 0) {
+      context.addIssue({ code: "custom", path: ["queues"], message: "Bull 队列必须显式填写 queues" });
+    }
     const hasClientCert = config.clientCert !== undefined && config.clientCert.trim().length > 0;
     const hasClientKey = config.clientKey !== undefined && config.clientKey.trim().length > 0;
     if (hasClientCert === hasClientKey) {

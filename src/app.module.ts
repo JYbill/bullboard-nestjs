@@ -3,12 +3,15 @@ import path from "node:path";
 import { Logger, Module, type MiddlewareConsumer, type NestModule, type OnApplicationShutdown } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { createBullBoard } from "@bull-board/api";
+import Bull from "bull";
+import { BullAdapter } from "@bull-board/api/bullAdapter";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { Queue, RedisConnection, type RedisOptions } from "bullmq";
 import { envConfigSchema } from "@/config/config.validate.js";
 import {
   BULL_BOARD_QUEUE_DELIMITER,
+  QueueType,
   BULLMQ_REDIS_CONNECT_TIMEOUT_MS,
   BULLMQ_REDIS_PING_INTERVAL_MS,
   BULLMQ_REDIS_SCAN_COUNT,
@@ -31,7 +34,7 @@ import type { RedisClientItem, RedisPingClient } from "./app.module.d.js";
 })
 export class AppModule implements NestModule, OnApplicationShutdown {
   private readonly logger = new Logger(AppModule.name);
-  private readonly queueList: Queue[] = [];
+  private readonly queueList: (Queue | Bull.Queue)[] = [];
   private readonly redisClientList: RedisClientItem[] = [];
   private readonly loggedQueueErrorSet = new WeakSet<Error>();
   private redisPingTimer?: NodeJS.Timeout;
@@ -45,11 +48,25 @@ export class AppModule implements NestModule, OnApplicationShutdown {
     const configList: BullmqConfigItem[] = this.config.getOrThrow("BULLMQ_CONFIG");
 
     // 显式配置和 Redis 自动发现都先归一成 Bull Board 适配器列表。
-    const queueAdapterList: BullMQAdapter[] = [];
+    const queueAdapterList: (BullMQAdapter | BullAdapter)[] = [];
     for (const config of configList) {
       const connectOption = this.buildRedisOptions(config);
       const prefix = config.prefix;
       const bullPrefix = config.bullPrefix;
+      // 旧 Bull 使用专属客户端及适配器，不执行 BullMQ 初始化或自动发现。
+      if (config.queueType === QueueType.Bull) {
+        for (const queueName of config.queues) {
+          const queue = new Bull(queueName, { redis: connectOption, prefix: bullPrefix });
+          queue.on("error", (error: Error) => {
+            this.logger.warn(`Bull 队列连接异常，queue=${queue.name}，原因 ${error.message}`);
+          });
+          this.queueList.push(queue);
+          await queue.isReady();
+          await queue.client.ping();
+          queueAdapterList.push(new BullAdapter(queue, { prefix, delimiter: BULL_BOARD_QUEUE_DELIMITER }));
+        }
+        continue;
+      }
       const redisClientItem = await this.createRedisClient(connectOption, config);
       let queueNameList: string[];
       try {

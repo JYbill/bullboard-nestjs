@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { loadBullmqConfig } from "./bullmq.config.js";
+import { loadBullmqConfig, bullmqConfigItemSchema } from "./bullmq.config.js";
 import { BULLMQ_REDIS_CONNECT_TIMEOUT_MS } from "@/enum/app.enum.js";
 import {
   TEST_BULLMQ_BULL_PREFIX,
@@ -90,5 +90,31 @@ describe("loadBullmqConfig", () => {
     writeBullmqConfig([{ ...completeConfigItem, undeclared: "removed" }]);
 
     expect(loadBullmqConfig(appRoot)).toEqual([completeConfigItem]);
+  });
+});
+
+describe("queue protocol configuration", () => {
+  // 目的：防止旧 Bull 配置被当作 BullMQ 自动发现。
+  // 总结：旧 Bull 必须显式声明队列，空清单在启动前报错。
+  it("rejects automatic discovery for Bull", () => {
+    // 期待：错误直接提示填写队列清单。
+    expect(() => bullmqConfigItemSchema.parse({ ...completeConfigItem, queueType: "bull", queues: [] })).toThrow(
+      "Bull 队列必须显式填写 queues",
+    );
+  });
+
+  // 目的：避免拼错协议时静默连接错误的队列库。
+  // 总结：协议只允许 bull 和 bullmq。
+  it("rejects unsupported queue protocols", () => {
+    // 期待：无效协议不能通过校验。
+    expect(bullmqConfigItemSchema.safeParse({ ...completeConfigItem, queueType: "redis" }).success).toBe(false);
+  });
+
+  // 目的：保护旧配置和新增 Bull 配置的解析行为。
+  // 总结：省略协议仍兼容，显式 Bull 不被 Schema 丢弃。
+  it("preserves Bull selection and accepts existing BullMQ config", () => {
+    // 期待：旧配置允许自动发现，Bull 选择保留供适配器使用。
+    expect(bullmqConfigItemSchema.parse({ ...completeConfigItem, queues: [] }).queueType).toBeUndefined();
+    expect(bullmqConfigItemSchema.parse({ ...completeConfigItem, queueType: "bull" }).queueType).toBe("bull");
   });
 });

@@ -9,3 +9,9 @@ export const BULLMQ_REDIS_PING_INTERVAL_MS = 30000;
 
 /** BullMQ Redis 自动发现队列时每批扫描的 key 数量。 */
 export const BULLMQ_REDIS_SCAN_COUNT = 100;
+
+/** 面板使用的队列协议，Bull 与 BullMQ 的数据结构不能混用。 */
+export enum QueueType {
+  Bull = "bull",
+  BullMQ = "bullmq",
+}
