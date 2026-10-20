@@ -3,4 +3,4 @@ allowBuilds:
   '@swc/core': true
   msgpackr-extract: true
 patchedDependencies:
-  '@bull-board/ui@9.6.1': patches/@bull-board__ui@9.6.1.patch
+  '@bull-board/ui@9.10.4': patches/@bull-board__ui@9.10.4.patch
