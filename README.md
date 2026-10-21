@@ -1,12 +1,6 @@
 # bullboard-nestjs
 
-- 功能：BullMQ dashboard，仅适配 BullMQ。
-- 初衷：为了测试环境快速查看和操作队列，所以保留了较轻量的功能范围。
-
-## 功能概要
-
-- 包含查看、增加等基于 bull-board 的简单交互。
-- ❌ bull-board 自定义选项未提取到环境变量。
+基于 bull-board 的队列管理面板，支持 BullMQ 和旧 Bull，用于在测试环境中快速查看和操作队列。
 
 ## 界面预览
 
@@ -16,11 +10,11 @@
 
 Docker Hub：<https://hub.docker.com/r/jyxiaoqinvar/bullboard/tags>
 
-下文中的 `<tag>` 请替换为 Docker Hub tags 页面中的实际镜像标签。
+下文使用 `latest` 镜像标签。
 
 ## 配置文件
 
-部署目录示例使用 `~/bullboard`：
+以下以 `~/bullboard` 为部署目录：
 
 ```shell
 mkdir -p ~/bullboard/env ~/bullboard/logs
@@ -39,40 +33,47 @@ BULL_BOARD_USERNAME=root
 BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646
 ```
 
-创建 `env/bullmq.config.json`：
+创建 `env/bullmq.config.json`。文件必须使用标准 JSON，不支持注释或尾逗号：
 
-```jsonc
+```json
 [
   {
-    // Redis 主机地址
-    "host": "127.0.0.1",
-    // Redis 端口
+    "host": "<redis-host>",
     "port": 6379,
-    // （可选）Redis 用户名，默认用户或未启用 ACL 时可以留空字符串
     "username": "",
-    // Redis 密码，没有可以留空字符串
     "password": "<redis-password>",
-    // （可选）Redis TLS CA 证书路径；Docker 部署时 env 目录挂载到 /app/env，未启用 TLS 可留空
-    "ca": "./env/ca.cer",
-    // （可选）Redis TLS 客户端证书路径；启用双向 TLS 时和 clientKey 一起填写
-    "clientCert": "./env/client.cer",
-    // （可选）Redis TLS 客户端私钥路径；启用双向 TLS 时和 clientCert 一起填写
-    "clientKey": "./env/client.key",
-    // Redis DB 库号
+    "ca": "",
+    "clientCert": "",
+    "clientKey": "",
     "dbNum": 0,
-    // BullMQ 的 prefix，必填
     "bullPrefix": "bull",
-    // （可选）Redis 连接超时时间，单位毫秒；默认 10000
     "timeout": 10000,
-    // （可选）Bull Board 展示前缀；Bull Board 会按 # 拆展示树，避免队列名中的 - 被拆成多级目录
     "prefix": "app#",
-    // 队列协议：bullmq（默认）或 bull；旧 Bull 必须显式填写非空 queues
     "queueType": "bullmq",
-    // 要展示的队列名列表；为空数组时自动展示该 Redis DB 内当前 prefix 下的所有 BullMQ 队列
-    "queues": ["example-queue"],
-  },
+    "queues": ["example-queue"]
+  }
 ]
 ```
+
+将 `<redis-host>`、`<redis-password>` 和 `example-queue` 替换为实际连接信息和队列名。`host` 应填写容器可访问的 Redis 地址；上述 Docker 部署方式中的 `127.0.0.1` 指向容器自身。
+
+| 字段 | 说明 |
+| --- | --- |
+| `host`、`port` | Redis 主机地址和端口。 |
+| `username` | 可选。默认用户或未启用 ACL 时可留空。 |
+| `password` | Redis 密码，无密码时填空字符串。 |
+| `ca` | 可选。Redis TLS CA 证书路径，例如 `./env/ca.cer`。 |
+| `clientCert`、`clientKey` | 可选。双向 TLS 的客户端证书和私钥路径，例如 `./env/client.cer`、`./env/client.key`，必须同时填写或同时留空。 |
+| `dbNum` | Redis 数据库编号。 |
+| `bullPrefix` | 必填。队列在 Redis 中使用的键前缀，须与生产者配置一致。 |
+| `timeout` | 可选。Redis 连接超时时间，单位毫秒，默认 `10000`。 |
+| `prefix` | 可选。面板中的展示前缀，与 Redis 键前缀无关。面板按 `#` 拆分目录，队列名中的 `-` 不会拆分目录。 |
+| `queueType` | 可选。`bullmq`（默认）或 `bull`。旧 Bull 必须设置为 `bull`。 |
+| `queues` | 必填。要展示的队列名数组。BullMQ 可填 `[]`，旧 Bull 必须列出队列名。 |
+
+未启用 TLS 时，将三个证书字段留空或省略。填写任一证书路径会启用 TLS；相对路径以应用工作目录为基准，Docker 中为 `/app`，部署目录下的 `env` 挂载到 `/app/env`。
+
+BullMQ 的 `queues` 为 `[]` 时，应用在启动时扫描指定 Redis 数据库内、`bullPrefix` 下的 `meta` 键来发现队列。运行期间新增的队列需要重启应用后才会显示。
 
 ## 使用 Docker 部署
 
@@ -85,7 +86,7 @@ docker run -d \
   -v "$PWD/env:/app/env" \
   -v "$PWD/logs:/app/logs" \
   --restart unless-stopped \
-  jyxiaoqinvar/bullboard:<tag>
+  jyxiaoqinvar/bullboard:latest
 ```
 
 常见操作：
@@ -111,7 +112,7 @@ docker rm -f bullboard
 ```yaml
 services:
   bullboard:
-    image: jyxiaoqinvar/bullboard:<tag>
+    image: jyxiaoqinvar/bullboard:latest
     container_name: bullboard
     ports:
       - "9110:9110"
@@ -126,28 +127,6 @@ services:
     restart: unless-stopped
 ```
 
-`pm2.config.cjs` 挂载是可选内容。默认情况下镜像会使用内置的 `/app/pm2.config.cjs`；需要自定义 PM2 运行参数时，可以参考本仓库根目录的 `pm2.config.cjs` 作为默认配置，复制到部署目录后取消上方挂载注释。确认理解每个配置项含义后，可以自行修改。PM2 配置文档：<https://pm2.keymetrics.io/docs/usage/application-declaration/>。
+镜像默认使用内置的 `/app/pm2.config.cjs`。需要自定义 PM2 运行参数时，将本仓库根目录的 `pm2.config.cjs` 复制到部署目录，并取消上方挂载注释。修改前请确认各配置项的含义，参考 PM2 配置文档：<https://pm2.keymetrics.io/docs/usage/application-declaration/>。
 
-启动和管理：
-
-```shell
-# 后台启动
-docker compose up -d
-
-# 查看日志
-docker compose logs -f
-
-# 停止并删除容器
-docker compose down
-
-# 启动容器
-docker compose start
-
-# 重启容器
-docker compose restart
-
-# 停止容器
-docker compose stop
-```
-
-部署完成后访问：`http://<服务器 IP>:9110`。
+部署完成后访问 `http://<服务器 IP>:9110`，使用配置的账号和原始密码登录，而不是填写密码摘要。示例账号为 `root`，密码为 `1234567890`，部署时请替换为自己的账号和密码摘要。
