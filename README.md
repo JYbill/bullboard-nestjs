@@ -105,28 +105,4 @@ docker start bullboard
 docker rm -f bullboard
 ```
 
-## 使用 Docker Compose 部署
-
-创建 `docker-compose.yaml`：
-
-```yaml
-services:
-  bullboard:
-    image: jyxiaoqinvar/bullboard:latest
-    container_name: bullboard
-    ports:
-      - "9110:9110"
-    environment:
-      TZ: "Asia/Shanghai"
-      LANG: "zh_CN.UTF-8"
-    volumes:
-      - ./env:/app/env
-      - ./logs:/app/logs
-      # （可选）覆盖镜像内置 PM2 配置；不挂载时使用镜像自带的 /app/pm2.config.cjs
-      # - ./pm2.config.cjs:/app/pm2.config.cjs:ro
-    restart: unless-stopped
-```
-
-镜像默认使用内置的 `/app/pm2.config.cjs`。需要自定义 PM2 运行参数时，将本仓库根目录的 `pm2.config.cjs` 复制到部署目录，并取消上方挂载注释。修改前请确认各配置项的含义，参考 PM2 配置文档：<https://pm2.keymetrics.io/docs/usage/application-declaration/>。
-
 部署完成后访问 `http://<服务器 IP>:9110`，使用配置的账号和原始密码登录，而不是填写密码摘要。示例账号为 `root`，密码为 `1234567890`，部署时请替换为自己的账号和密码摘要。

@@ -1,0 +1,335 @@
+# Apply to felixmosh/bull-board tag v9.10.4 with git apply.
+# Install its locked dependencies with corepack yarn install --immutable.
+# Build @bull-board/api, then build @bull-board/ui with their workspace build scripts.
+# Diff the resulting UI dist against the npm tarball to update the pnpm patch.
+# Keep the existing removal of the Google Fonts link in dist/index.ejs.
+diff --git a/packages/ui/src/hooks/useQueues.ts b/packages/ui/src/hooks/useQueues.ts
+index 66106d9..64a2a14 100644
+--- a/packages/ui/src/hooks/useQueues.ts
++++ b/packages/ui/src/hooks/useQueues.ts
+@@ -1,5 +1,5 @@
+ import { GetQueuesResponse } from '@bull-board/api/typings/responses';
+-import { keepPreviousData, useQuery } from '@tanstack/react-query';
++import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query';
+ import { useShallow } from 'zustand/react/shallow';
+ import { QueueActions } from '../../typings/app';
+ import { queryKeys } from './queryKeys';
+@@ -18,7 +18,11 @@ export type QueuesState = {
+   isTransitioning: boolean;
+ };
+
+-export function useQueues(): QueuesState & { actions: QueueActions } {
++/** Reads queue data for the current page and filters and exposes a manual refresh. */
++export function useQueues(): QueuesState & {
++  actions: QueueActions;
++  refetch: UseQueryResult<GetQueuesResponse['queues']>['refetch'];
++} {
+   const { page } = useSearchParams();
+   const api = useApi();
+   const activeQueueName = useActiveQueueName();
+@@ -33,7 +37,7 @@ export function useQueues(): QueuesState & { actions: QueueActions } {
+   const status = activeQueueName ? selectedStatuses[activeQueueName] : undefined;
+   const params = { activeQueue: activeQueueName || undefined, status, page, jobsPerPage };
+
+-  const { data, isPending, isFetching, isPlaceholderData } = useQuery({
++  const { data, isPending, isFetching, isPlaceholderData, refetch } = useQuery({
+     queryKey: queryKeys.queues.list(params),
+     queryFn: () => api.getQueues(params),
+     refetchInterval: pollingInterval > 0 ? pollingInterval * 1000 : false,
+@@ -53,5 +57,6 @@ export function useQueues(): QueuesState & { actions: QueueActions } {
+     fetching: isFetching,
+     isTransitioning: isPlaceholderData,
+     actions,
++    refetch,
+   };
+ }
+diff --git a/packages/ui/src/pages/QueuePage/QueuePage.module.css b/packages/ui/src/pages/QueuePage/QueuePage.module.css
+index 135ffa0..e05b230 100644
+--- a/packages/ui/src/pages/QueuePage/QueuePage.module.css
++++ b/packages/ui/src/pages/QueuePage/QueuePage.module.css
+@@ -1,3 +1,25 @@
++.pageControls {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  justify-content: flex-end;
++  gap: 0.5rem;
++  margin-inline-start: auto;
++}
++
++.pageControls .refreshButton {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  min-inline-size: 2.25rem;
++  min-block-size: 2.25rem;
++}
++
++.refreshButton:disabled {
++  opacity: 0.55;
++  cursor: default;
++}
++
+ .schedulersLink {
+   display: inline-flex;
+   align-items: center;
+@@ -36,6 +58,15 @@
+ }
+
+ @media (max-width: 768px) {
++  .pageControls {
++    margin-inline-start: 0;
++  }
++
++  .pageControls > ul {
++    flex: 1 1 auto;
++    width: auto;
++  }
++
+   .schedulersLabel {
+     display: none;
+   }
+diff --git a/packages/ui/src/pages/QueuePage/QueuePage.tsx b/packages/ui/src/pages/QueuePage/QueuePage.tsx
+index 2c741a5..f672622 100644
+--- a/packages/ui/src/pages/QueuePage/QueuePage.tsx
++++ b/packages/ui/src/pages/QueuePage/QueuePage.tsx
+@@ -3,6 +3,8 @@ import type { AppJob } from '@bull-board/api/typings/app';
+ import React, { Suspense, useState } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import { Link } from 'react-router-dom';
++import { Button } from '../../components/Button/Button';
++import { RetryIcon } from '../../components/Icons/Retry';
+ import { SchedulersIcon } from '../../components/Icons/Schedulers';
+ import { JobCard } from '../../components/JobCard/JobCard';
+ import { Loader } from '../../components/Loader/Loader';
+@@ -64,7 +66,7 @@ export const QueuePage = () => {
+   const { t } = useTranslation();
+   const { showMetrics = false } = useUIConfig();
+   const selectedStatus = useSelectedStatuses();
+-  const { actions, loading, isTransitioning } = useQueues();
++  const { actions, loading, fetching, isTransitioning, refetch } = useQueues();
+   const { actions: jobActions } = useJob();
+   const queue = useActiveQueue();
+   const modal = useModal<
+@@ -97,7 +99,20 @@ export const QueuePage = () => {
+               />
+             )}
+
+-            <Pagination pageCount={queue.pagination.pageCount} />
++            <div className={s.pageControls}>
++              <Button
++                className={s.refreshButton}
++                theme="basic"
++                compact
++                aria-label={t('QUEUE.REFRESH')}
++                title={t('QUEUE.REFRESH')}
++                disabled={fetching}
++                onClick={() => void refetch({ cancelRefetch: false })}
++              >
++                <RetryIcon />
++              </Button>
++              <Pagination pageCount={queue.pagination.pageCount} />
++            </div>
+           </>
+         }
+       >
+diff --git a/packages/ui/src/static/locales/da-DK/messages.json b/packages/ui/src/static/locales/da-DK/messages.json
+index edd7181..98cec21 100644
+--- a/packages/ui/src/static/locales/da-DK/messages.json
++++ b/packages/ui/src/static/locales/da-DK/messages.json
+@@ -139,6 +139,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Opdater",
+     "NOT_FOUND": "Kø ikke fundet",
+     "EMPTY_STATE": "Ingen {{status}} jobs i denne kø.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/de-DE/messages.json b/packages/ui/src/static/locales/de-DE/messages.json
+index 7a6ec52..5458cbc 100644
+--- a/packages/ui/src/static/locales/de-DE/messages.json
++++ b/packages/ui/src/static/locales/de-DE/messages.json
+@@ -139,6 +139,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Aktualisieren",
+     "NOT_FOUND": "Warteschlange nicht gefunden",
+     "EMPTY_STATE": "Keine {{status}} Jobs in dieser Warteschlange.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/en-GB/messages.json b/packages/ui/src/static/locales/en-GB/messages.json
+index 9d9626a..e1d2089 100644
+--- a/packages/ui/src/static/locales/en-GB/messages.json
++++ b/packages/ui/src/static/locales/en-GB/messages.json
+@@ -139,6 +139,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Refresh",
+     "NOT_FOUND": "Queue Not found",
+     "EMPTY_STATE": "No {{status}} jobs in this queue.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/en-US/messages.json b/packages/ui/src/static/locales/en-US/messages.json
+index 07613fe..b39eb8b 100644
+--- a/packages/ui/src/static/locales/en-US/messages.json
++++ b/packages/ui/src/static/locales/en-US/messages.json
+@@ -138,6 +138,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Refresh",
+     "NOT_FOUND": "Queue Not found",
+     "EMPTY_STATE": "No {{status}} jobs in this queue.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/es-ES/messages.json b/packages/ui/src/static/locales/es-ES/messages.json
+index a56edbb..919fd14 100644
+--- a/packages/ui/src/static/locales/es-ES/messages.json
++++ b/packages/ui/src/static/locales/es-ES/messages.json
+@@ -140,6 +140,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Actualizar",
+     "NOT_FOUND": "Cola no encontrada",
+     "EMPTY_STATE": "No hay trabajos {{status}} en esta cola.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/fr-FR/messages.json b/packages/ui/src/static/locales/fr-FR/messages.json
+index 03610b4..24336ea 100644
+--- a/packages/ui/src/static/locales/fr-FR/messages.json
++++ b/packages/ui/src/static/locales/fr-FR/messages.json
+@@ -140,6 +140,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Actualiser",
+     "NOT_FOUND": "File non trouvée",
+     "EMPTY_STATE": "Aucune tâche {{status}} dans cette file.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/ja-JP/messages.json b/packages/ui/src/static/locales/ja-JP/messages.json
+index 4354769..9baab62 100644
+--- a/packages/ui/src/static/locales/ja-JP/messages.json
++++ b/packages/ui/src/static/locales/ja-JP/messages.json
+@@ -138,6 +138,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "更新",
+     "NOT_FOUND": "キューが見つかりません",
+     "EMPTY_STATE": "このキューに{{status}}ジョブはありません。",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/ko-KR/messages.json b/packages/ui/src/static/locales/ko-KR/messages.json
+index a6c6a43..2c641ec 100644
+--- a/packages/ui/src/static/locales/ko-KR/messages.json
++++ b/packages/ui/src/static/locales/ko-KR/messages.json
+@@ -137,6 +137,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "새로고침",
+     "NOT_FOUND": "큐를 찾을 수 없습니다",
+     "EMPTY_STATE": "이 큐에 {{status}} 작업이 없습니다.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/pt-BR/messages.json b/packages/ui/src/static/locales/pt-BR/messages.json
+index c77bbe2..3213b38 100644
+--- a/packages/ui/src/static/locales/pt-BR/messages.json
++++ b/packages/ui/src/static/locales/pt-BR/messages.json
+@@ -140,6 +140,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Atualizar",
+     "NOT_FOUND": "Fila não encontrada",
+     "EMPTY_STATE": "Nenhuma tarefa {{status}} nesta fila.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/ru-RU/messages.json b/packages/ui/src/static/locales/ru-RU/messages.json
+index 8d5e24e..be93650 100644
+--- a/packages/ui/src/static/locales/ru-RU/messages.json
++++ b/packages/ui/src/static/locales/ru-RU/messages.json
+@@ -141,6 +141,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Обновить",
+     "NOT_FOUND": "Очередь не найдена",
+     "EMPTY_STATE": "В этой очереди нет задач со статусом {{status}}.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/tr-TR/messages.json b/packages/ui/src/static/locales/tr-TR/messages.json
+index ed872e9..7f2a12a 100644
+--- a/packages/ui/src/static/locales/tr-TR/messages.json
++++ b/packages/ui/src/static/locales/tr-TR/messages.json
+@@ -139,6 +139,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "Yenile",
+     "NOT_FOUND": "Kuyruk bulunamadı.",
+     "EMPTY_STATE": "Bu kuyrukta “{{status}}” durumunda iş bulunmuyor.",
+     "ACTIONS": {
+diff --git a/packages/ui/src/static/locales/zh-CN/messages.json b/packages/ui/src/static/locales/zh-CN/messages.json
+index 1f096d8..aaddb5f 100644
+--- a/packages/ui/src/static/locales/zh-CN/messages.json
++++ b/packages/ui/src/static/locales/zh-CN/messages.json
+@@ -137,6 +137,7 @@
+     }
+   },
+   "QUEUE": {
++    "REFRESH": "刷新",
+     "NOT_FOUND": "未找到队列",
+     "EMPTY_STATE": "此队列中没有 {{status}} 的作业。",
+     "ACTIONS": {
+diff --git a/packages/ui/tests/pages/QueuePage.spec.tsx b/packages/ui/tests/pages/QueuePage.spec.tsx
+index a7f7fad..e32cbde 100644
+--- a/packages/ui/tests/pages/QueuePage.spec.tsx
++++ b/packages/ui/tests/pages/QueuePage.spec.tsx
+@@ -1,10 +1,10 @@
+ import type { AppQueue } from '@bull-board/api/typings/app';
+ import type { GetQueuesResponse } from '@bull-board/api/typings/responses';
+-import { waitFor } from '@testing-library/react';
++import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+ import { createMemoryHistory } from 'history';
+ import { useSettingsStore } from '../../src/hooks/useSettings';
+ import { QueuePage } from '../../src/pages/QueuePage/QueuePage';
+-import { createWrapper, makeQueue, render } from '../testUtils';
++import { createWrapper, deferred, makeQueue, render } from '../testUtils';
+
+ jest.mock('../../src/utils/highlight/highlight', () => ({
+   asyncHighlight: async (code: string) => code,
+@@ -42,3 +42,38 @@ it('keeps the schedulers link on a read only queue', async () => {
+
+   await waitFor(() => expect(schedulersLink()).toBeTruthy());
+ });
++
++it('refreshes the selected page and status with polling off, even on an empty read-only queue', async () => {
++  const queues = [
++    makeQueue('reports', {
++      readOnlyMode: true,
++      pagination: { pageCount: 2, range: { start: 10, end: 19 } },
++    }),
++  ];
++  const response = deferred<GetQueuesResponse>();
++  const getQueues = jest
++    .fn(() => Promise.resolve<GetQueuesResponse>({ queues }))
++    .mockImplementationOnce(() => Promise.resolve({ queues }))
++    .mockImplementationOnce(() => response.promise);
++  const history = createMemoryHistory({ initialEntries: ['/queue/reports?page=2&status=waiting'] });
++  const { Wrapper } = createWrapper({ api: { getQueues }, history });
++  render(<QueuePage />, { wrapper: Wrapper });
++
++  const refresh = await screen.findByRole('button', { name: 'QUEUE.REFRESH' });
++  expect(refresh.textContent).toBe('');
++  fireEvent.click(refresh);
++
++  await waitFor(() => expect(refresh).toHaveProperty('disabled', true));
++  fireEvent.click(refresh);
++  expect(getQueues).toHaveBeenCalledTimes(2);
++  expect(getQueues).toHaveBeenLastCalledWith({
++    activeQueue: 'reports',
++    status: 'waiting',
++    page: '2',
++    jobsPerPage: 10,
++  });
++  expect(history.location.search).toBe('?page=2&status=waiting');
++
++  await act(async () => response.resolve({ queues }));
++  await waitFor(() => expect(refresh).toHaveProperty('disabled', false));
++});
