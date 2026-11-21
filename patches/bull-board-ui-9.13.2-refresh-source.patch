@@ -1,17 +1,16 @@
-# Apply to felixmosh/bull-board tag v9.10.4 with git apply.
+# Apply to felixmosh/bull-board tag v9.13.2 with git apply.
 # Install its locked dependencies with corepack yarn install --immutable.
 # Build @bull-board/api, then build @bull-board/ui with their workspace build scripts.
 # Diff the resulting UI dist against the npm tarball to update the pnpm patch.
-# Keep the existing removal of the Google Fonts link in dist/index.ejs.
 diff --git a/packages/ui/src/components/HeaderActions/HeaderActions.tsx b/packages/ui/src/components/HeaderActions/HeaderActions.tsx
-index 403bf00..70485bb 100644
+index e175970..835dad1 100644
 --- a/packages/ui/src/components/HeaderActions/HeaderActions.tsx
 +++ b/packages/ui/src/components/HeaderActions/HeaderActions.tsx
-@@ -1,12 +1,20 @@
+@@ -1,13 +1,20 @@
 +import { useIsFetching, useQueryClient } from '@tanstack/react-query';
  import cn from 'clsx';
  import React, { Suspense } from 'react';
-+import { useTranslation } from 'react-i18next';
+ import { useTranslation } from 'react-i18next';
 +import { useRouteMatch } from 'react-router-dom';
 +import { queryKeys } from '../../hooks/queryKeys';
 +import { useActiveJobId } from '../../hooks/useActiveJobId';
@@ -28,11 +27,10 @@ index 403bf00..70485bb 100644
  import { Settings } from '../Icons/Settings';
  import buttonStyles from '../Button/Button.module.css';
  import s from './HeaderActions.module.css';
-@@ -37,6 +45,34 @@ const DOCS_LABEL = 'Docs';
- export const HeaderActions = () => {
+@@ -39,6 +46,33 @@ export const HeaderActions = () => {
    const { miscLinks = [], hideRedisDetails = false, hideDocsLink = false } = useUIConfig();
    const modal = useModal<ModalTypes>();
-+  const { t } = useTranslation();
+   const { t } = useTranslation();
 +  const queryClient = useQueryClient();
 +  const queueName = useActiveQueueName();
 +  const jobId = useActiveJobId();
@@ -60,10 +58,10 @@ index 403bf00..70485bb 100644
 +
 +    await refetch({ cancelRefetch: false });
 +  };
-
+ 
    return (
      <>
-@@ -48,6 +84,19 @@ export const HeaderActions = () => {
+@@ -55,6 +89,19 @@ export const HeaderActions = () => {
              </Button>
            </li>
          )}
@@ -99,7 +97,7 @@ index b48d76c..4c65e1f 100644
  import { Button } from '../../../../Button/Button';
  import { CopyButton } from '../../../../CopyButton/CopyButton';
 @@ -41,30 +44,28 @@ function formatLogs(logs: string[]) {
-
+ 
  export const JobLogs = ({ actions, job }: JobLogsProps) => {
    const { t } = useTranslation();
 -  const [logs, setLogs] = useState<LogType[]>([]);
@@ -117,7 +115,7 @@ index b48d76c..4c65e1f 100644
    const [inputValue, setInputValue] = useState('');
    const logsContainer = useRef<HTMLDivElement>(null);
    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+ 
 -  useEffect(() => {
 -    let mounted = true;
 -    actions.getJobLogs().then((logs) => {
@@ -144,12 +142,12 @@ index b48d76c..4c65e1f 100644
          const scrollableElement = logsContainer.current?.querySelector(`.${s.preWrapper}`);
          scrollableElement?.scrollTo({
 diff --git a/packages/ui/src/hooks/queryKeys.ts b/packages/ui/src/hooks/queryKeys.ts
-index 2026c4a..1a936d5 100644
+index 823e03e..aca6422 100644
 --- a/packages/ui/src/hooks/queryKeys.ts
 +++ b/packages/ui/src/hooks/queryKeys.ts
 @@ -15,6 +15,7 @@ export const queryKeys = {
    queueWorkers: (queueName: string | null) => ['queueWorkers', queueName] as const,
-   queuesHasWorkers: ['queuesHasWorkers'] as const,
+   queueHasWorkers: (queueName: string) => ['queueHasWorkers', queueName] as const,
    job: (queueName: string, jobId: string) => ['job', queueName, jobId] as const,
 +  jobLogs: (queueName: string, jobId: string) => ['jobLogs', queueName, jobId] as const,
    jobFlow: (queueName: string, jobId: string) => ['jobFlow', queueName, jobId] as const,
@@ -162,7 +160,7 @@ index c63b04f..d8dd400 100644
 @@ -52,13 +52,15 @@ export function useDetailsTabs(params: { currentStatus: Status; withTimeline: bo
      [params.currentStatus, params.withTimeline]
    );
-
+ 
 -  const [selectedTab, setSelectedTab] = useState<TabsType>(() =>
 -    resolveSelectedTab(tabs, defaultJobTab, configuredDefault)
 -  );
@@ -171,13 +169,13 @@ index c63b04f..d8dd400 100644
 +    selectedTabOverride && tabs.includes(selectedTabOverride)
 +      ? selectedTabOverride
 +      : resolveSelectedTab(tabs, defaultJobTab, configuredDefault);
-
+ 
    useEffect(() => {
 -    setSelectedTab(resolveSelectedTab(tabs, defaultJobTab, configuredDefault));
 -  }, [defaultJobTab, configuredDefault, tabs]);
 +    setSelectedTab(undefined);
 +  }, [defaultJobTab, configuredDefault]);
-
+ 
    return { tabs, selectedTab, selectTab: setSelectedTab };
  }
 diff --git a/packages/ui/src/hooks/useQueueSearch.ts b/packages/ui/src/hooks/useQueueSearch.ts
@@ -187,12 +185,12 @@ index c9a2cb2..2103e8d 100644
 @@ -1,11 +1,20 @@
  import { create } from 'zustand';
 +import { persist } from 'zustand/middleware';
-
+ 
  type QueueSearchState = {
    searchTerm: string;
    setSearchTerm: (term: string) => void;
  };
-
+ 
 -export const useQueueSearch = create<QueueSearchState>((set) => ({
 -  searchTerm: '',
 -  setSearchTerm: (searchTerm: string) => set({ searchTerm }),
@@ -223,7 +221,7 @@ index 66106d9..64a2a14 100644
 @@ -18,7 +18,11 @@ export type QueuesState = {
    isTransitioning: boolean;
  };
-
+ 
 -export function useQueues(): QueuesState & { actions: QueueActions } {
 +/** Reads queue data for the current page and filters and exposes a manual refresh. */
 +export function useQueues(): QueuesState & {
@@ -236,7 +234,7 @@ index 66106d9..64a2a14 100644
 @@ -33,7 +37,7 @@ export function useQueues(): QueuesState & { actions: QueueActions } {
    const status = activeQueueName ? selectedStatuses[activeQueueName] : undefined;
    const params = { activeQueue: activeQueueName || undefined, status, page, jobsPerPage };
-
+ 
 -  const { data, isPending, isFetching, isPlaceholderData } = useQuery({
 +  const { data, isPending, isFetching, isPlaceholderData, refetch } = useQuery({
      queryKey: queryKeys.queues.list(params),
@@ -249,27 +247,39 @@ index 66106d9..64a2a14 100644
 +    refetch,
    };
  }
+diff --git a/packages/ui/src/index.ejs b/packages/ui/src/index.ejs
+index 4ed04e7..eb697f4 100644
+--- a/packages/ui/src/index.ejs
++++ b/packages/ui/src/index.ejs
+@@ -8,7 +8,6 @@
+     <title><%= title %></title>
+     <link rel="alternate icon" type="image/png" href="<%= favIconAlternative %>">
+     <link rel="icon" type="image/svg+xml" id="fav-logo" href="<%= favIconDefault %>">
+-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+ </head>
+ <body class="preload">
+ <script id="__UI_CONFIG__" type="application/json"><%= uiConfig %></script>
 diff --git a/packages/ui/src/static/locales/da-DK/messages.json b/packages/ui/src/static/locales/da-DK/messages.json
-index edd7181..60811bb 100644
+index 5b46219..f780fb7 100644
 --- a/packages/ui/src/static/locales/da-DK/messages.json
 +++ b/packages/ui/src/static/locales/da-DK/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Planlægninger"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Slå fuld skærm til/fra"
    },
    "DASHBOARD": {
 +    "REFRESH": "Opdater oversigt",
      "JOBS_COUNT_one": "{{count}} Job",
      "JOBS_COUNT_other": "{{count}} Jobs",
      "JOBS_COUNT": "{{count}} Jobs",
-@@ -34,6 +35,7 @@
-     }
+@@ -40,6 +41,7 @@
+     "ACTIONS": "Handlinger for tavlen"
    },
    "JOB": {
 +    "REFRESH": "Opdater aktuelt job",
      "DELAY_CHANGED": "*Forsinkelse ændret; den nye køretid er i øjeblikket ukendt",
      "NOT_FOUND": "Job ikke fundet",
      "STATUS": "Status: {{status}}",
-@@ -139,6 +141,7 @@
+@@ -145,6 +147,7 @@
      }
    },
    "QUEUE": {
@@ -278,26 +288,26 @@ index edd7181..60811bb 100644
      "EMPTY_STATE": "Ingen {{status}} jobs i denne kø.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/de-DE/messages.json b/packages/ui/src/static/locales/de-DE/messages.json
-index 7a6ec52..eb7dc08 100644
+index f83c8ee..cb62e20 100644
 --- a/packages/ui/src/static/locales/de-DE/messages.json
 +++ b/packages/ui/src/static/locales/de-DE/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Zeitpläne"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Vollbild umschalten"
    },
    "DASHBOARD": {
 +    "REFRESH": "Übersicht aktualisieren",
      "JOBS_COUNT_one": "{{count}} Job",
      "JOBS_COUNT_other": "{{count}} Job",
      "JOBS_COUNT": "{{count}} Jobs",
-@@ -34,6 +35,7 @@
-     }
+@@ -40,6 +41,7 @@
+     "ACTIONS": "Board-Aktionen"
    },
    "JOB": {
 +    "REFRESH": "Aktuellen Job aktualisieren",
      "DELAY_CHANGED": "*Verzögerung geändert; die neue Ausführungszeit ist derzeit unbekannt",
      "NOT_FOUND": "Job nicht gefunden",
      "STATUS": "Status: {{status}}",
-@@ -139,6 +141,7 @@
+@@ -145,6 +147,7 @@
      }
    },
    "QUEUE": {
@@ -306,26 +316,26 @@ index 7a6ec52..eb7dc08 100644
      "EMPTY_STATE": "Keine {{status}} Jobs in dieser Warteschlange.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/en-GB/messages.json b/packages/ui/src/static/locales/en-GB/messages.json
-index 9d9626a..46ae359 100644
+index 42385f6..0d0c33b 100644
 --- a/packages/ui/src/static/locales/en-GB/messages.json
 +++ b/packages/ui/src/static/locales/en-GB/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Schedulers"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Toggle full screen"
    },
    "DASHBOARD": {
 +    "REFRESH": "Refresh overview",
      "JOBS_COUNT_one": "{{count}} Job",
      "JOBS_COUNT_other": "{{count}} Jobs",
      "JOBS_COUNT": "{{count}} Jobs",
-@@ -34,6 +35,7 @@
-     }
+@@ -40,6 +41,7 @@
+     "ACTIONS": "Board actions"
    },
    "JOB": {
 +    "REFRESH": "Refresh current job",
      "DELAY_CHANGED": "*Delay changed; the new run time is currently unknown",
      "NOT_FOUND": "Job Not found",
      "STATUS": "Status: {{status}}",
-@@ -139,6 +141,7 @@
+@@ -145,6 +147,7 @@
      }
    },
    "QUEUE": {
@@ -334,26 +344,26 @@ index 9d9626a..46ae359 100644
      "EMPTY_STATE": "No {{status}} jobs in this queue.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/en-US/messages.json b/packages/ui/src/static/locales/en-US/messages.json
-index 07613fe..e849651 100644
+index 27d316b..6dd6f33 100644
 --- a/packages/ui/src/static/locales/en-US/messages.json
 +++ b/packages/ui/src/static/locales/en-US/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Schedulers"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Toggle fullscreen"
    },
    "DASHBOARD": {
 +    "REFRESH": "Refresh overview",
      "JOBS_COUNT_one": "{{count}} Job",
      "JOBS_COUNT": "{{count}} Jobs",
      "EMPTY_STATE": "No queues to display.",
-@@ -33,6 +34,7 @@
-     }
+@@ -39,6 +40,7 @@
+     "ACTIONS": "Board actions"
    },
    "JOB": {
 +    "REFRESH": "Refresh current job",
      "DELAY_CHANGED": "*Delay changed; the new run time is currently unknown",
      "NOT_FOUND": "Job Not found",
      "STATUS": "Status: {{status}}",
-@@ -138,6 +140,7 @@
+@@ -144,6 +146,7 @@
      }
    },
    "QUEUE": {
@@ -362,26 +372,26 @@ index 07613fe..e849651 100644
      "EMPTY_STATE": "No {{status}} jobs in this queue.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/es-ES/messages.json b/packages/ui/src/static/locales/es-ES/messages.json
-index a56edbb..4a3bfc4 100644
+index 4652f85..38b5776 100644
 --- a/packages/ui/src/static/locales/es-ES/messages.json
 +++ b/packages/ui/src/static/locales/es-ES/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Programaciones"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Alternar pantalla completa"
    },
    "DASHBOARD": {
 +    "REFRESH": "Actualizar resumen",
      "JOBS_COUNT_one": "{{count}} Tarea",
      "JOBS_COUNT_many": "{{count}} Tareas",
      "JOBS_COUNT_other": "{{count}} Tareas",
-@@ -35,6 +36,7 @@
-     }
+@@ -41,6 +42,7 @@
+     "ACTIONS": "Acciones del panel"
    },
    "JOB": {
 +    "REFRESH": "Actualizar tarea actual",
      "DELAY_CHANGED": "*Retraso modificado; el nuevo tiempo de ejecución es actualmente desconocido",
      "NOT_FOUND": "Tarea no encontrada",
      "STATUS": "Estado: {{status}}",
-@@ -140,6 +142,7 @@
+@@ -146,6 +148,7 @@
      }
    },
    "QUEUE": {
@@ -390,26 +400,26 @@ index a56edbb..4a3bfc4 100644
      "EMPTY_STATE": "No hay trabajos {{status}} en esta cola.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/fr-FR/messages.json b/packages/ui/src/static/locales/fr-FR/messages.json
-index 03610b4..896969c 100644
+index c80421b..c8f718e 100644
 --- a/packages/ui/src/static/locales/fr-FR/messages.json
 +++ b/packages/ui/src/static/locales/fr-FR/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Planificateurs"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Basculer en plein écran"
    },
    "DASHBOARD": {
 +    "REFRESH": "Actualiser la vue d’ensemble",
      "JOBS_COUNT_one": "{{count}} Tâche",
      "JOBS_COUNT_many": "{{count}} Tâches",
      "JOBS_COUNT_other": "{{count}} Tâches",
-@@ -35,6 +36,7 @@
-     }
+@@ -41,6 +42,7 @@
+     "ACTIONS": "Actions du tableau de bord"
    },
    "JOB": {
 +    "REFRESH": "Actualiser la tâche actuelle",
      "DELAY_CHANGED": "*Délai modifié; le nouveau temps d'exécution est actuellement inconnu",
      "NOT_FOUND": "Tâche non trouvée",
      "STATUS": "Statut : {{status}}",
-@@ -140,6 +142,7 @@
+@@ -146,6 +148,7 @@
      }
    },
    "QUEUE": {
@@ -418,26 +428,26 @@ index 03610b4..896969c 100644
      "EMPTY_STATE": "Aucune tâche {{status}} dans cette file.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/ja-JP/messages.json b/packages/ui/src/static/locales/ja-JP/messages.json
-index 4354769..942fc0d 100644
+index 00e26a9..3867fb8 100644
 --- a/packages/ui/src/static/locales/ja-JP/messages.json
 +++ b/packages/ui/src/static/locales/ja-JP/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "スケジューラー"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "全画面表示の切り替え"
    },
    "DASHBOARD": {
 +    "REFRESH": "概要を更新",
      "JOBS_COUNT": "{{count}} ジョブ",
      "JOBS_COUNT_other": "{{count}} ジョブ",
      "EMPTY_STATE": "表示するキューがありません。",
-@@ -33,6 +34,7 @@
-     }
+@@ -39,6 +40,7 @@
+     "ACTIONS": "ボードの操作"
    },
    "JOB": {
 +    "REFRESH": "現在のジョブを更新",
      "DELAY_CHANGED": "*遅延が変更されました; 新しい実行時間は現在不明です",
      "NOT_FOUND": "ジョブが見つかりません",
      "STATUS": "ステータス: {{status}}",
-@@ -138,6 +140,7 @@
+@@ -144,6 +146,7 @@
      }
    },
    "QUEUE": {
@@ -446,26 +456,26 @@ index 4354769..942fc0d 100644
      "EMPTY_STATE": "このキューに{{status}}ジョブはありません。",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/ko-KR/messages.json b/packages/ui/src/static/locales/ko-KR/messages.json
-index a6c6a43..75b93fd 100644
+index 831c8dd..d1d2d61 100644
 --- a/packages/ui/src/static/locales/ko-KR/messages.json
 +++ b/packages/ui/src/static/locales/ko-KR/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "스케줄러"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "전체 화면 전환"
    },
    "DASHBOARD": {
 +    "REFRESH": "개요 새로고침",
      "JOBS_COUNT": "{{count}}개의 작업",
      "EMPTY_STATE": "표시할 큐가 없습니다.",
      "EMPTY_STATE_FILTERED": "{{status}} 작업이 있는 큐가 없습니다.",
-@@ -32,6 +33,7 @@
-     }
+@@ -38,6 +39,7 @@
+     "ACTIONS": "보드 작업"
    },
    "JOB": {
 +    "REFRESH": "현재 작업 새로고침",
      "DELAY_CHANGED": "*지연 시간이 변경되었습니다. 새로운 실행 시간은 현재 알 수 없습니다",
      "NOT_FOUND": "작업을 찾을 수 없습니다",
      "STATUS": "상태: {{status}}",
-@@ -137,6 +139,7 @@
+@@ -143,6 +145,7 @@
      }
    },
    "QUEUE": {
@@ -474,26 +484,26 @@ index a6c6a43..75b93fd 100644
      "EMPTY_STATE": "이 큐에 {{status}} 작업이 없습니다.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/pt-BR/messages.json b/packages/ui/src/static/locales/pt-BR/messages.json
-index c77bbe2..74660c8 100644
+index 3089fd9..aa0c483 100644
 --- a/packages/ui/src/static/locales/pt-BR/messages.json
 +++ b/packages/ui/src/static/locales/pt-BR/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Agendamentos"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Alternar tela cheia"
    },
    "DASHBOARD": {
 +    "REFRESH": "Atualizar visão geral",
      "JOBS_COUNT_one": "{{count}} Tarefa",
      "JOBS_COUNT_many": "{{count}} Tarefas",
      "JOBS_COUNT_other": "{{count}} Tarefas",
-@@ -35,6 +36,7 @@
-     }
+@@ -41,6 +42,7 @@
+     "ACTIONS": "Ações do painel"
    },
    "JOB": {
 +    "REFRESH": "Atualizar tarefa atual",
      "DELAY_CHANGED": "*Atraso alterado; o novo horário de execução ainda é desconhecido",
      "NOT_FOUND": "Tarefa não encontrada",
      "STATUS": "Status: {{status}}",
-@@ -140,6 +142,7 @@
+@@ -146,6 +148,7 @@
      }
    },
    "QUEUE": {
@@ -502,26 +512,26 @@ index c77bbe2..74660c8 100644
      "EMPTY_STATE": "Nenhuma tarefa {{status}} nesta fila.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/ru-RU/messages.json b/packages/ui/src/static/locales/ru-RU/messages.json
-index 8d5e24e..5c149bc 100644
+index 62a927d..6272028 100644
 --- a/packages/ui/src/static/locales/ru-RU/messages.json
 +++ b/packages/ui/src/static/locales/ru-RU/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Планировщики"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Переключить полноэкранный режим"
    },
    "DASHBOARD": {
 +    "REFRESH": "Обновить обзор",
      "JOBS_COUNT_one": "{{count}} задача",
      "JOBS_COUNT_few": "{{count}} задачи",
      "JOBS_COUNT_many": "{{count}} задач",
-@@ -36,6 +37,7 @@
-     }
+@@ -42,6 +43,7 @@
+     "ACTIONS": "Действия панели"
    },
    "JOB": {
 +    "REFRESH": "Обновить текущее задание",
      "DELAY_CHANGED": "*Задержка изменена; новое время запуска пока неизвестно",
      "NOT_FOUND": "Задача не найдена",
      "STATUS": "Статус: {{status}}",
-@@ -141,6 +143,7 @@
+@@ -147,6 +149,7 @@
      }
    },
    "QUEUE": {
@@ -530,26 +540,26 @@ index 8d5e24e..5c149bc 100644
      "EMPTY_STATE": "В этой очереди нет задач со статусом {{status}}.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/tr-TR/messages.json b/packages/ui/src/static/locales/tr-TR/messages.json
-index ed872e9..9618979 100644
+index 39e559d..4c2ad94 100644
 --- a/packages/ui/src/static/locales/tr-TR/messages.json
 +++ b/packages/ui/src/static/locales/tr-TR/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "Zamanlayıcılar"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "Tam ekranı aç/kapat"
    },
    "DASHBOARD": {
 +    "REFRESH": "Genel bakışı yenile",
      "JOBS_COUNT_one": "{{count}} iş",
      "JOBS_COUNT_other": "{{count}} iş",
      "JOBS_COUNT": "{{count}} iş",
-@@ -34,6 +35,7 @@
-     }
+@@ -40,6 +41,7 @@
+     "ACTIONS": "Pano işlemleri"
    },
    "JOB": {
 +    "REFRESH": "Geçerli işi yenile",
      "DELAY_CHANGED": "*Gecikme süresi değişti; yeni çalışma zamanı henüz hesaplanamadı.",
      "NOT_FOUND": "İş bulunamadı.",
      "STATUS": "Durum: {{status}}",
-@@ -139,6 +141,7 @@
+@@ -145,6 +147,7 @@
      }
    },
    "QUEUE": {
@@ -558,26 +568,26 @@ index ed872e9..9618979 100644
      "EMPTY_STATE": "Bu kuyrukta “{{status}}” durumunda iş bulunmuyor.",
      "ACTIONS": {
 diff --git a/packages/ui/src/static/locales/zh-CN/messages.json b/packages/ui/src/static/locales/zh-CN/messages.json
-index 1f096d8..85b9544 100644
+index 3a5642c..f721b17 100644
 --- a/packages/ui/src/static/locales/zh-CN/messages.json
 +++ b/packages/ui/src/static/locales/zh-CN/messages.json
-@@ -13,6 +13,7 @@
-     "SCHEDULERS": "调度器"
+@@ -17,6 +17,7 @@
+     "FULLSCREEN": "切换全屏"
    },
    "DASHBOARD": {
 +    "REFRESH": "刷新总览",
      "JOBS_COUNT": "{{count}} 个作业",
      "EMPTY_STATE": "没有可显示的队列。",
      "EMPTY_STATE_FILTERED": "没有队列包含 {{status}} 的作业。",
-@@ -32,6 +33,7 @@
-     }
+@@ -38,6 +39,7 @@
+     "ACTIONS": "面板操作"
    },
    "JOB": {
 +    "REFRESH": "刷新当前任务",
      "DELAY_CHANGED": "*延迟已更改；新的运行时间目前未知",
      "NOT_FOUND": "未找到作业",
      "STATUS": "状态：{{status}}",
-@@ -137,6 +139,7 @@
+@@ -143,6 +145,7 @@
      }
    },
    "QUEUE": {
@@ -600,11 +610,11 @@ index a7f7fad..dbdee4e 100644
  import { QueuePage } from '../../src/pages/QueuePage/QueuePage';
 -import { createWrapper, makeQueue, render } from '../testUtils';
 +import { createWrapper, deferred, makeQueue, render } from '../testUtils';
-
+ 
  jest.mock('../../src/utils/highlight/highlight', () => ({
    asyncHighlight: async (code: string) => code,
 @@ -42,3 +43,51 @@ it('keeps the schedulers link on a read only queue', async () => {
-
+ 
    await waitFor(() => expect(schedulersLink()).toBeTruthy());
  });
 +

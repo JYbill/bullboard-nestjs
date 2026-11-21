@@ -6,6 +6,17 @@
 
 ![Bull Dashboard 首页](docs/images/home_page.png)
 
+## 本项目的扩展
+
+以下是本项目在 [bull-board 9.13.2](https://github.com/felixmosh/bull-board/tree/v9.13.2) 基础上增加的功能。
+
+- **手动刷新当前视图**。在总览、队列和任务详情页都可以点击顶部按钮刷新数据。在任务详情页，已打开的日志也会一起刷新，当前详情标签页会保留。
+- **记住队列筛选词**。浏览器会保留上次输入的队列搜索词，重新打开面板后仍可沿用。
+- **在同一个面板查看多个 Redis 实例**。在 `env/bullmq.config.json` 中为每组队列分别配置 Redis 地址、数据库、键前缀和证书。每组可指定队列，也可设置为启动时自动发现 BullMQ 队列。
+- **按配置组织队列分组**。用 `prefix` 给不同环境或应用加上展示前缀。队列按 `#` 分组，名称里的 `-` 保持原样。
+- **BullMQ Redis 连接探活**。同组队列共用一个 Redis 连接。面板每 30 秒检查一次连接，探活失败时会记录日志。
+- **使用密码摘要配置面板登录**。部署时在 `env/.env` 中填写账号和密码的 SHA-256 摘要，浏览器登录时输入原始密码。
+
 ## 镜像地址
 
 Docker Hub：<https://hub.docker.com/r/jyxiaoqinvar/bullboard/tags>
@@ -55,7 +66,7 @@ BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab7828
 ]
 ```
 
-将 `<redis-host>`、`<redis-password>` 和 `example-queue` 替换为实际连接信息和队列名。`host` 应填写容器可访问的 Redis 地址；上述 Docker 部署方式中的 `127.0.0.1` 指向容器自身。
+将 `<redis-host>`、`<redis-password>` 和 `example-queue` 替换为实际连接信息和队列名。`host` 应填写容器能访问的 Redis 地址。容器内的 `127.0.0.1` 指向容器自身。
 
 | 字段 | 说明 |
 | --- | --- |
@@ -75,7 +86,21 @@ BULL_BOARD_PASSWORD_HASH=c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab7828
 
 BullMQ 的 `queues` 为 `[]` 时，应用在启动时扫描指定 Redis 数据库内、`bullPrefix` 下的 `meta` 键来发现队列。运行期间新增的队列需要重启应用后才会显示。
 
-## 使用 Docker 部署
+## 部署
+
+### Docker Compose
+
+将仓库里的 [docker-compose.yaml](docker-compose.yaml) 放到部署目录，与 `env/` 和 `logs/` 同级。模板使用 `jyxiaoqinvar/bullboard:latest`，将这两个目录分别挂载到容器的 `/app/env` 和 `/app/logs`。
+
+模板还挂载了宿主机的 `/etc/localtime` 和 `/etc/vimrc`。部署机器缺少对应文件时，删除模板中的对应挂载项即可。
+
+在部署目录启动面板：
+
+```shell
+docker compose up -d bullboard
+```
+
+### Docker
 
 ```shell
 docker run -d \
@@ -89,20 +114,6 @@ docker run -d \
   jyxiaoqinvar/bullboard:latest
 ```
 
-常见操作：
+### 访问面板
 
-```shell
-# 查看日志
-docker logs -f bullboard
-
-# 停止容器
-docker stop bullboard
-
-# 启动容器
-docker start bullboard
-
-# 删除容器
-docker rm -f bullboard
-```
-
-部署完成后访问 `http://<服务器 IP>:9110`，使用配置的账号和原始密码登录，而不是填写密码摘要。示例账号为 `root`，密码为 `1234567890`，部署时请替换为自己的账号和密码摘要。
+部署完成后访问 `http://<服务器 IP>:9110`，使用配置的账号和原始密码登录。部署时请替换示例账号和密码摘要。修改 `env/.env` 中的 `PORT` 时，也要调整端口映射右侧的容器端口。浏览器访问端口由映射左侧的宿主机端口决定。
