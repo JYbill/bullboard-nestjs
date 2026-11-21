@@ -1,7 +1,8 @@
 # Apply to felixmosh/bull-board tag v9.13.2 with git apply.
 # Install its locked dependencies with corepack yarn install --immutable.
 # Build @bull-board/api, then build @bull-board/ui with their workspace build scripts.
-# Diff the resulting UI dist against the npm tarball to update the pnpm patch.
+# Diff the resulting UI dist against the npm tarball with git diff --no-renames.
+# pnpm 12.10.1 cannot apply rename or copy records in package patches.
 diff --git a/packages/ui/src/components/HeaderActions/HeaderActions.tsx b/packages/ui/src/components/HeaderActions/HeaderActions.tsx
 index e175970..835dad1 100644
 --- a/packages/ui/src/components/HeaderActions/HeaderActions.tsx
