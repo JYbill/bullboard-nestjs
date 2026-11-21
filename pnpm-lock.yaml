@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@bull-board/ui@9.10.4': 3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53
+  '@bull-board/ui@9.10.4': ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4
 
 importers:
 
@@ -13,7 +13,7 @@ importers:
     dependencies:
       '@bull-board/api':
         specifier: ^9.10.4
-        version: 9.10.4(@bull-board/ui@9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
+        version: 9.10.4(@bull-board/ui@9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
       '@bull-board/express':
         specifier: ^9.10.4
         version: 9.10.4(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(supports-color@7.2.0)(typescript@6.0.3)
@@ -3286,9 +3286,9 @@ snapshots:
 
   '@borewit/text-codec@0.2.2': {}
 
-  '@bull-board/api@9.10.4(@bull-board/ui@9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)':
+  '@bull-board/api@9.10.4(@bull-board/ui@9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)':
     dependencies:
-      '@bull-board/ui': 9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
+      '@bull-board/ui': 9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
       redis-info: 3.1.0
       valibot: 1.5.0(typescript@6.0.3)
     optionalDependencies:
@@ -3299,8 +3299,8 @@ snapshots:
 
   '@bull-board/express@9.10.4(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(supports-color@7.2.0)(typescript@6.0.3)':
     dependencies:
-      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
-      '@bull-board/ui': 9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
+      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
+      '@bull-board/ui': 9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
       ejs: 6.0.1
       express: 5.3.0(supports-color@7.2.0)
     transitivePeerDependencies:
@@ -3309,9 +3309,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@bull-board/ui@9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)':
+  '@bull-board/ui@9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)':
     dependencies:
-      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(patch_hash=3fc0b390d7fab414434b673e508ddd641cd9053c0562068cfc3494277822ed53)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
+      '@bull-board/api': 9.10.4(@bull-board/ui@9.10.4(patch_hash=ccaaeadbcaf56d8e47256233a3b14fe97daf02b38c49475f6fc1ab9643bc9eb4)(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3))(bull@4.16.5(supports-color@7.2.0))(bullmq@6.3.17(ioredis@6.0.0(supports-color@7.2.0)))(typescript@6.0.3)
     transitivePeerDependencies:
       - bull
       - bullmq
